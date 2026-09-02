@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>h11y-sampler keymap prototype (THROWAWAY)</title>
+<style>
+  :root { --bg:#0f1115; --panel:#171a21; --ink:#e6e6e6; --dim:#8a8f9c; --accent:#ffb454; --line:#2a2f3a; --red:#ff5a5a; --sel:#5ad1ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }
+  header { padding:14px 20px 8px; border-bottom:1px solid var(--line); }
+  header h1 { margin:0 0 4px; font-size:17px; font-weight:600; }
+  header p { margin:0; color:var(--dim); max-width:980px; }
+  #wavewrap { position:relative; margin:12px 20px 0; height:220px; background:var(--panel); border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  #wavewrap.shake { animation: shake .3s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+  canvas { display:block; width:100%; height:100%; cursor:crosshair; }
+  #status { display:flex; gap:18px; margin:8px 20px 0; padding:8px 12px; background:var(--panel); border:1px solid var(--line); border-radius:6px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px; flex-wrap:wrap; }
+  #status b { color:var(--accent); font-weight:600; }
+  #status .mode { padding:1px 8px; border-radius:4px; background:var(--accent); color:#000; font-weight:700; }
+  #status .mode.insert { background:#7bd88f; } #status .mode.select { background:var(--sel); }
+  #toast { position:fixed; left:50%; top:14px; transform:translateX(-50%); background:#2b2f3a; color:#fff; padding:8px 14px; border-radius:6px; border:1px solid #444; opacity:0; transition:opacity .15s; pointer-events:none; z-index:9; font-size:13px; }
+  #toast.show { opacity:1; }
+  .cols { display:grid; grid-template-columns: 400px 1fr; gap:12px; margin:12px 20px 20px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:12px 14px; }
+  .panel h2 { margin:0 0 8px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--dim); }
+  dl { display:grid; grid-template-columns: 120px 1fr; gap:3px 10px; margin:0; font-family:ui-monospace,Menlo,monospace; font-size:12px; }
+  dt { color:var(--dim); } dd { margin:0; }
+  .changed { color:var(--accent); }
+  table { border-collapse:collapse; width:100%; font-family:ui-monospace,Menlo,monospace; font-size:12px; margin-top:6px; }
+  th, td { text-align:left; padding:3px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--dim); font-weight:500; }
+  tr.active td { background:rgba(90,209,255,.12); }
+  .tabs { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:10px; }
+  .tabs button { background:transparent; color:var(--dim); border:1px solid var(--line); border-radius:4px; padding:4px 10px; cursor:pointer; font-size:12.5px; }
+  .tabs button.on { color:#000; background:var(--accent); border-color:var(--accent); }
+  .tab { display:none; } .tab.on { display:block; }
+  .step { display:flex; gap:10px; align-items:flex-start; padding:6px 0; border-bottom:1px dashed var(--line); }
+  .step .n { color:var(--dim); width:22px; flex:none; font-family:Menlo,monospace; }
+  .step .t { flex:1; }
+  .step.done .t { color:var(--dim); }
+  kbd { font-family:ui-monospace,Menlo,monospace; background:#262a33; border:1px solid #3a3f4b; border-bottom-width:2px; border-radius:4px; padding:0 5px; font-size:11.5px; color:#fff; }
+  button.do { background:#262a33; color:#fff; border:1px solid #3a3f4b; border-radius:4px; padding:2px 8px; cursor:pointer; font-size:12px; flex:none; }
+  button.do:hover { border-color:var(--accent); }
+  .km td:first-child { white-space:nowrap; }
+  #log { font-family:ui-monospace,Menlo,monospace; font-size:11.5px; color:var(--dim); max-height:260px; overflow:auto; white-space:pre-wrap; }
+  #prompt { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:8; }
+  #prompt.open { display:flex; }
+  #prompt .box { background:#1d2129; border:1px solid #3a3f4b; border-radius:8px; padding:16px 18px; width:440px; }
+  #prompt label { display:block; color:var(--dim); font-size:12px; margin-bottom:6px; }
+  #prompt input { width:100%; font:15px ui-monospace,Menlo,monospace; padding:8px 10px; background:#0f1115; color:#fff; border:1px solid var(--accent); border-radius:4px; outline:none; }
+  #prompt .preview { margin-top:8px; font-family:Menlo,monospace; font-size:12px; color:var(--accent); min-height:16px; }
+  #prompt .hint { margin-top:8px; color:var(--dim); font-size:12px; }
+  select { background:#0f1115; color:#fff; border:1px solid var(--line); border-radius:4px; padding:3px 6px; }
+  .settings label { display:block; margin:6px 0; }
+  #drop { border:1px dashed var(--line); border-radius:6px; padding:14px; text-align:center; color:var(--dim); margin-top:8px; }
+  #drop.over { border-color:var(--accent); color:var(--accent); }
+  .note { color:var(--dim); font-size:12.5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>h11y-sampler keymap prototype <span class="note">(throwaway; the state machine in the first script block is the keepable part)</span></h1>
+  <p><b>Question:</b> do the three modes (Playhead, Insert Region, Region Select) and their keys feel right when driven by hand? Specifically: the three scrub step sizes, <kbd>j</kbd>/<kbd>k</kbd>/<kbd>J</kbd>/<kbd>K</kbd> zoom, the <kbd>i</kbd>/<kbd>I</kbd> then <kbd>o</kbd> Anchor flow, the Tab shake, the save prompt, Space tap-vs-hold looping, and the directional <kbd>a</kbd> audition. Click the waveform once, then use the keyboard. The 30-second test signal is synthesized: a 55 Hz bass tone, then drum-like hits every half second, then a tremolo tone.</p>
+</header>
+
+<div id="wavewrap"><canvas id="wave"></canvas></div>
+<div id="status"></div>
+<div id="toast"></div>
+
+<div class="cols">
+  <div class="panel" id="statepanel"><h2>Current state</h2><div id="state"></div></div>
+  <div class="panel">
+    <div class="tabs" id="tabbar"></div>
+    <div id="tabs"></div>
+  </div>
+</div>
+
+<div id="prompt"><div class="box">
+  <label id="promptLabel">Name this region</label>
+  <input id="promptInput" type="text" spellcheck="false" autocomplete="off">
+  <div class="preview" id="promptPreview"></div>
+  <div class="hint">Enter saves · Esc discards the region · Enter on the untouched default keeps the name automatic</div>
+</div></div>
+
+<script>
+// =====================================================================
+// PURE MODULE: the state machine. No DOM. Liftable.
+// Frames are the unit of truth. SR is fixed for the prototype.
+// =====================================================================
+const Chopper = (() => {
+  const SR = 48000;
+
+  function initial(frames, basename) {
+    return {
+      frames, basename, sr: SR,
+      mode: 'playhead',              // 'playhead' | 'insert' | 'select'
+      playhead: 0,                   // frame
+      returnPoint: null,             // frame while playing in playhead mode
+      regions: [],                   // {id, start, end, name|null}  name null = automatic
+      nextId: 1,
+      draft: null,                   // {start|null, end|null, active:'start'|'end', editingId|null}
+      activeId: null,
+      selected: [],                  // region ids
+      view: { win: frames, start: 0 },
+      viewPx: 1000,                  // canvas width, supplied by the page
+      undo: [], redo: [],
+      settings: { plainPct: 1, coarsePct: 10, fine: '1px', auditionMs: 300, gapPct: 20, tapMs: 200 },
+      toast: null, shake: 0, prompt: null,
+      play: null, playSeq: 0,        // intents for the transport
+      exportReq: null, exportSeq: 0,
+      lastChange: '',
+    };
+  }
+
+  // ---------- helpers ----------
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const byStart = (a, b) => (a.start - b.start) || (a.end - b.end);
+  const ordered = s => [...s.regions].sort(byStart);
+  const find = (s, id) => s.regions.find(r => r.id === id) || null;
+  const toast = (s, text) => ({ ...s, toast: { text, at: Date.now() } });
+
+  // Steps are relative to the visible window, so zoom is the precision control.
+  function stepFrames(s, size) {
+    const { plainPct, coarsePct, fine } = s.settings;
+    const win = s.view.win;
+    if (size === 'plain') return Math.max(1, Math.round(win * plainPct / 100));
+    if (size === 'coarse') return Math.max(1, Math.round(win * coarsePct / 100));
+    if (fine === '1px') return Math.max(1, Math.round(win / Math.max(1, s.viewPx)));
+    return fine === '1sample' ? 1 : fine === '10ms' ? SR / 100 : SR / 1000;
+  }
+
+  function focusFrame(s) {
+    if (s.mode === 'insert' && s.draft) {
+      const f = s.draft[s.draft.active];
+      if (f != null) return f;
+    }
+    if (s.mode === 'select' && s.activeId != null) {
+      const r = find(s, s.activeId);
+      if (r) return r.start; // the view follows the active region; the playhead does not move
+    }
+    return s.playhead;
+  }
+
+  function keepVisible(s) {
+    const f = focusFrame(s), { win } = s.view;
+    let start = s.view.start;
+    if (f < start || f > start + win) start = f - win / 2;
+    start = clamp(Math.round(start), 0, Math.max(0, s.frames - win));
+    return { ...s, view: { ...s.view, start } };
+  }
+  function centerOn(s, win) {
+    win = clamp(Math.round(win), 64, s.frames);
+    const f = focusFrame(s);
+    const start = clamp(Math.round(f - win / 2), 0, Math.max(0, s.frames - win));
+    return { ...s, view: { win, start } };
+  }
+
+  function pushUndo(s) {
+    return { ...s, undo: [...s.undo, s.regions].slice(-50), redo: [] };
+  }
+
+  function defaultIndex(s, region) {
+    return ordered(s).findIndex(r => r.id === region.id); // zero-based position in start order
+  }
+  function pad(n, count) {
+    const w = Math.max(2, String(Math.max(0, count - 1)).length);
+    return String(n).padStart(w, '0');
+  }
+  function displayName(s, r) {
+    return r.name != null ? r.name : `${s.basename}-${defaultIndex(s, r)}`;
+  }
+
+  // ---------- filename rules (ticket 07) ----------
+  const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
+  function sanitize(name) {
+    let n = name.normalize('NFC');
+    n = n.replace(/[\/\\:*?"<>|\x00-\x1f]/g, '_');
+    n = n.replace(/\s+/g, ' ').trim();
+    n = n.replace(/^[. ]+|[. ]+$/g, '');
+    if (RESERVED.test(n)) n += '_';
+    if (n.length > 120) n = n.slice(0, 120);
+    if (/\.wav$/i.test(n)) n = n.slice(0, -4);
+    return n;
+  }
+  function filenames(s, regions) {
+    // [{region, file, collided}] for the given regions, computed over ALL regions in start order
+    const all = ordered(s);
+    const set = new Set(regions.map(r => r.id));
+    const seen = new Map();
+    const out = [];
+    all.forEach((r, i) => {
+      let base = r.name != null ? sanitize(r.name) : '';
+      if (!base) base = `${s.basename}-${pad(i, all.length)}`;
+      const key = base.toLowerCase();
+      const n = (seen.get(key) || 0) + 1;
+      seen.set(key, n);
+      const file = (n > 1 ? `${base} (${n})` : base) + '.wav';
+      if (set.has(r.id)) out.push({ region: r, file, collided: n > 1 });
+    });
+    return out;
+  }
+
+  // ---------- keymap: (state, keyEvent) -> action | null ----------
+  // ev: {type:'down'|'up', code, shift, alt, meta, ctrl, repeat}
+  function keyToAction(s, ev) {
+    const { code, shift, alt, meta, ctrl, repeat } = ev;
+    if (s.prompt) return null; // the prompt owns the keyboard
+    if (ev.type === 'up') {
+      if (code === 'Space' && s.play && s.play.kind === 'preview' && s.play.hold) return { type: 'previewUp' };
+      return null;
+    }
+    // global: Space while anything is playing stops it (Shift+Space keeps its select-mode meaning)
+    if (code === 'Space' && !shift && !repeat && s.play) return { type: 'stop' };
+    if (meta && code === 'KeyZ') return { type: shift ? 'redo' : 'undo' };
+    if (meta && code === 'KeyE') return { type: 'exportBatch' };
+    const scrubKey = code === 'BracketLeft' || code === 'BracketRight' ||
+      (s.mode !== 'select' && (code === 'KeyH' || code === 'KeyL'));
+    if (scrubKey) {
+      if (meta) return null;
+      const dir = (code === 'BracketLeft' || code === 'KeyH') ? -1 : 1;
+      return { type: 'scrub', dir, size: alt ? 'coarse' : shift ? 'fine' : 'plain' };
+    }
+    if (code === 'KeyJ' && !meta && !ctrl) return { type: 'zoom', kind: shift ? 'second' : 'in' };
+    if (code === 'KeyK' && !meta && !ctrl) return { type: 'zoom', kind: shift ? 'fit' : 'out' };
+
+    if (s.mode === 'playhead') {
+      if (code === 'Space') return repeat ? null : { type: 'playToggle' };
+      if (code === 'KeyI') return { type: 'insert', first: shift ? 'end' : 'start' };
+      if (code === 'KeyA') return { type: 'auditionPlayhead', side: shift ? 'end' : 'start' }; // a: ahead, A: behind
+      if (code === 'Tab') return { type: 'tab' };
+      if (code === 'KeyU') return { type: 'undo' };
+      if (code === 'KeyR' && ctrl) return { type: 'redo' };
+      return null;
+    }
+    if (s.mode === 'insert') {
+      if (code === 'KeyO') return { type: 'anchor' };
+      if (code === 'KeyS') return { type: 'save', exportAfter: shift }; // S: name, save, export, back to Playhead
+      if (code === 'KeyA') return { type: 'audition' };
+      if (code === 'Escape') return { type: 'cancel' };
+      if (code === 'Space') return repeat ? null : { type: 'previewDown' };
+      return null;
+    }
+    if (s.mode === 'select') {
+      if (code === 'KeyH') return { type: 'cycle', dir: -1 };
+      if (code === 'KeyL') return { type: 'cycle', dir: 1 };
+      if (code === 'KeyE') return shift ? { type: 'exportOne' } : { type: 'edit' };
+      if (code === 'Space') return shift ? { type: 'toggleSelect' } : repeat ? null : { type: 'previewDown' };
+      if (code === 'KeyA') return shift ? { type: 'clearSelect' } : { type: 'selectAll' };
+      if (code === 'KeyP') return { type: 'toPlayhead', at: shift ? 'end' : 'start' };
+      if (code === 'KeyX') return { type: 'delete' };
+      if (code === 'KeyR') return ctrl ? { type: 'redo' } : { type: 'rename' };
+      if (code === 'KeyU') return { type: 'undo' };
+      if (code === 'Escape' || code === 'Tab') return { type: 'cancel' };
+      return null;
+    }
+    return null;
+  }
+
+  // ---------- reducer ----------
+  function reduce(s, a) {
+    s = { ...s, lastChange: a.type };
+    switch (a.type) {
+
+      case 'setSetting': return { ...s, settings: { ...s.settings, [a.key]: a.value } };
+      case 'setViewPx': return s.viewPx === a.px ? s : { ...s, viewPx: a.px };
+
+      case 'scrub': {
+        const d = a.dir * stepFrames(s, a.size);
+        if (s.mode === 'insert' && s.draft) {
+          const dr = { ...s.draft };
+          const other = dr.active === 'start' ? dr.end : dr.start;
+          let v = clamp(dr[dr.active] + d, 0, s.frames);
+          if (other != null) v = dr.active === 'start' ? Math.min(v, other) : Math.max(v, other); // no criss-cross
+          dr[dr.active] = v;
+          return keepVisible({ ...s, draft: dr });
+        }
+        const playhead = clamp(s.playhead + d, 0, s.frames);
+        let n = { ...s, playhead };
+        if (s.play && s.play.kind === 'playhead') {
+          n = { ...n, returnPoint: playhead, play: { kind: 'playhead', from: playhead }, playSeq: s.playSeq + 1 };
+        }
+        return keepVisible(n);
+      }
+      case 'seekTo': {
+        if (s.mode === 'insert' && s.draft) {
+          // drag moves whichever anchor is being edited
+          const dr = { ...s.draft };
+          const other = dr.active === 'start' ? dr.end : dr.start;
+          let v = clamp(Math.round(a.frame), 0, s.frames);
+          if (other != null) v = dr.active === 'start' ? Math.min(v, other) : Math.max(v, other);
+          dr[dr.active] = v;
+          return { ...s, draft: dr };
+        }
+        if (s.mode !== 'playhead') return s;
+        const playhead = clamp(Math.round(a.frame), 0, s.frames);
+        let n = { ...s, playhead };
+        if (s.play && s.play.kind === 'playhead') n = { ...n, returnPoint: playhead, play: { kind: 'playhead', from: playhead }, playSeq: s.playSeq + 1 };
+        return keepVisible(n);
+      }
+
+      case 'zoom': {
+        // j/k: 20% steps. J/K: 80% steps, J floored at a one-second window, K capped at the whole file.
+        const win = a.kind === 'in' ? s.view.win / 1.2
+          : a.kind === 'out' ? s.view.win * 1.2
+          : a.kind === 'second' ? Math.max(1 * SR, s.view.win * 0.2)
+          : Math.min(s.frames, s.view.win * 5);
+        return centerOn(s, win);
+      }
+
+      case 'playToggle': {
+        if (s.play && s.play.kind === 'playhead') {
+          return { ...s, playhead: s.returnPoint, returnPoint: null, play: null, playSeq: s.playSeq + 1 };
+        }
+        return { ...s, returnPoint: s.playhead, play: { kind: 'playhead', from: s.playhead }, playSeq: s.playSeq + 1 };
+      }
+      case 'stop': {
+        if (!s.play) return s;
+        const playhead = s.play.kind === 'playhead' && s.returnPoint != null ? s.returnPoint : s.playhead;
+        return { ...s, playhead, returnPoint: null, play: null, playSeq: s.playSeq + 1 };
+      }
+      case 'playbackEnded': {
+        if (!s.play) return s;
+        if (s.play.kind === 'playhead') return { ...s, playhead: s.returnPoint ?? s.playhead, returnPoint: null, play: null };
+        return { ...s, play: null };
+      }
+
+      case 'insert': {
+        // i: start at the playhead, end placed a gap later, end anchor active (ready to adjust).
+        // I: end at the playhead, start placed a gap earlier, start anchor active.
+        const gap = Math.max(1, Math.round(s.view.win * s.settings.gapPct / 100));
+        const draft = a.first === 'start'
+          ? { start: s.playhead, end: clamp(s.playhead + gap, s.playhead, s.frames), active: 'end', editingId: null }
+          : { start: clamp(s.playhead - gap, 0, s.playhead), end: s.playhead, active: 'start', editingId: null };
+        return keepVisible({ ...stopAll(s), mode: 'insert', draft });
+      }
+      case 'anchor': {
+        const dr = { ...s.draft };
+        const gap = Math.max(1, Math.round(s.view.win * s.settings.gapPct / 100)); // relative to the visible window
+        if (dr.end == null) { dr.end = clamp(dr.start + gap, dr.start, s.frames); dr.active = 'end'; }
+        else if (dr.start == null) { dr.start = clamp(dr.end - gap, 0, dr.end); dr.active = 'start'; }
+        else dr.active = dr.active === 'start' ? 'end' : 'start';
+        return keepVisible({ ...s, draft: dr });
+      }
+      case 'save': {
+        const dr = s.draft;
+        if (dr.start == null || dr.end == null) return toast({ ...s, shake: s.shake + 1 }, 'Both ends needed. Press o to place the other end.');
+        if (dr.end <= dr.start) return toast({ ...s, shake: s.shake + 1 }, 'Region has no length.');
+        const editing = dr.editingId != null ? find(s, dr.editingId) : null;
+        const idx = editing
+          ? defaultIndex({ ...s, regions: s.regions.map(r => r.id === editing.id ? { ...r, start: dr.start, end: dr.end } : r) }, editing)
+          : ordered(s).filter(r => r.start < dr.start || (r.start === dr.start && r.end <= dr.end)).length;
+        const def = `${s.basename}-${idx}`;
+        const value = editing && editing.name != null ? editing.name : def;
+        return { ...stopAll(s), prompt: { value, def, forDraft: true, regionId: null, exportAfter: !!a.exportAfter } };
+      }
+      case 'cancel': {
+        if (s.mode === 'insert') return { ...stopAll(s), mode: 'playhead', draft: null };
+        if (s.mode === 'select') return { ...stopAll(s), mode: 'playhead', activeId: null };
+        return s;
+      }
+      case 'audition': {
+        const dr = s.draft; if (!dr) return s;
+        const f = dr[dr.active]; if (f == null) return s;
+        return audition(s, f, dr.active);
+      }
+      case 'auditionPlayhead': return audition(s, s.playhead, a.side);
+      case 'previewDown': {
+        if (s.mode === 'insert') {
+          const dr = s.draft;
+          if (dr.start == null || dr.end == null) { const side = dr.start == null ? 'end' : 'start'; return audition(s, dr[side], side); }
+          if (dr.end <= dr.start) return s;
+          return { ...s, play: { kind: 'preview', start: dr.start, end: dr.end, hold: true }, playSeq: s.playSeq + 1 };
+        }
+        const r = find(s, s.activeId); if (!r) return s;
+        return { ...s, play: { kind: 'preview', start: r.start, end: r.end, hold: true }, playSeq: s.playSeq + 1 };
+      }
+      case 'previewUp': {
+        if (!s.play || s.play.kind !== 'preview') return s;
+        return { ...s, play: { ...s.play, hold: false }, playSeq: s.playSeq + 1 };
+      }
+
+      case 'promptInput': return { ...s, prompt: { ...s.prompt, value: a.value } };
+      case 'promptCommit': {
+        const p = s.prompt; if (!p) return s;
+        const typed = p.value.trim();
+        const name = (typed === '' || typed === p.def) ? null : typed;
+        if (p.forDraft) {
+          const dr = s.draft;
+          let n = pushUndo(s);
+          let savedId;
+          if (dr.editingId != null) {
+            savedId = dr.editingId;
+            n = { ...n, regions: n.regions.map(r => r.id === dr.editingId ? { ...r, start: dr.start, end: dr.end, name } : r) };
+          } else {
+            savedId = n.nextId;
+            n = { ...n, regions: [...n.regions, { id: n.nextId, start: dr.start, end: dr.end, name }], nextId: n.nextId + 1 };
+          }
+          n = keepVisible({ ...n, prompt: null, draft: null, mode: 'playhead', playhead: dr.end, activeId: null });
+          if (p.exportAfter) {
+            const files = filenames(n, [find(n, savedId)]);
+            n = { ...n, exportReq: { kind: 'one', files }, exportSeq: n.exportSeq + 1 };
+          }
+          return n;
+        }
+        let n = pushUndo(s);
+        return { ...n, regions: n.regions.map(r => r.id === p.regionId ? { ...r, name } : r), prompt: null };
+      }
+      case 'promptCancel': {
+        if (!s.prompt) return s;
+        if (s.prompt.forDraft) return { ...s, prompt: null, draft: null, mode: 'playhead' };
+        return { ...s, prompt: null };
+      }
+
+      case 'tab': {
+        if (s.regions.length === 0) return toast({ ...s, shake: s.shake + 1 }, 'No regions yet. Press i to add one.');
+        const ph = s.playhead;
+        const inside = ordered(s).filter(r => r.start <= ph && ph <= r.end);
+        let pick;
+        if (inside.length) pick = inside.reduce((a, b) => (a.end - a.start) <= (b.end - b.start) ? a : b);
+        else pick = ordered(s).reduce((a, b) => dist(a, ph) <= dist(b, ph) ? a : b);
+        return { ...stopAll(s), mode: 'select', activeId: pick.id };
+      }
+      case 'cycle': {
+        const list = ordered(s); if (!list.length) return s;
+        const i = list.findIndex(r => r.id === s.activeId);
+        const j = (i + a.dir + list.length) % list.length;
+        return keepVisible({ ...stopAll(s), activeId: list[j].id }); // the playhead stays where it was
+      }
+      case 'edit': {
+        const r = find(s, s.activeId); if (!r) return s;
+        return keepVisible({ ...stopAll(s), mode: 'insert', draft: { start: r.start, end: r.end, active: 'end', editingId: r.id } });
+      }
+      case 'toggleSelect': {
+        const id = s.activeId; if (id == null) return s;
+        const selected = s.selected.includes(id) ? s.selected.filter(x => x !== id) : [...s.selected, id];
+        return { ...s, selected };
+      }
+      case 'selectAll': return { ...s, selected: s.regions.map(r => r.id) };
+      case 'clearSelect': return { ...s, selected: [] };
+      case 'toPlayhead': {
+        const r = find(s, s.activeId); if (!r) return s;
+        return keepVisible({ ...stopAll(s), mode: 'playhead', playhead: a.at === 'start' ? r.start : r.end });
+      }
+      case 'delete': {
+        const list = ordered(s); const i = list.findIndex(r => r.id === s.activeId); if (i < 0) return s;
+        let n = pushUndo(s);
+        n = { ...n, regions: n.regions.filter(r => r.id !== s.activeId), selected: n.selected.filter(x => x !== s.activeId) };
+        const rest = list.filter(r => r.id !== s.activeId);
+        if (!rest.length) return toast({ ...stopAll(n), mode: 'playhead', activeId: null }, 'No regions left.');
+        const next = rest[Math.min(i, rest.length - 1)];
+        return { ...stopAll(n), activeId: next.id };
+      }
+      case 'rename': {
+        const r = find(s, s.activeId); if (!r) return s;
+        const def = `${s.basename}-${defaultIndex(s, r)}`;
+        return { ...stopAll(s), prompt: { value: r.name != null ? r.name : def, def, forDraft: false, regionId: r.id } };
+      }
+      case 'undo': {
+        if (!s.undo.length) return toast(s, 'Nothing to undo.');
+        const regions = s.undo[s.undo.length - 1];
+        return fixActive({ ...s, regions, undo: s.undo.slice(0, -1), redo: [...s.redo, s.regions] });
+      }
+      case 'redo': {
+        if (!s.redo.length) return toast(s, 'Nothing to redo.');
+        const regions = s.redo[s.redo.length - 1];
+        return fixActive({ ...s, regions, redo: s.redo.slice(0, -1), undo: [...s.undo, s.regions] });
+      }
+
+      case 'exportOne': {
+        const r = find(s, s.activeId); if (!r) return s;
+        const files = filenames(s, [r]);
+        return { ...stopAll(s), exportReq: { kind: 'one', files }, exportSeq: s.exportSeq + 1 };
+      }
+      case 'exportBatch': {
+        if (!s.regions.length) return toast(s, 'Nothing to export.');
+        const set = s.selected.length ? s.regions.filter(r => s.selected.includes(r.id)) : s.regions;
+        const files = filenames(s, set);
+        return { ...stopAll(s), selected: [], exportReq: { kind: 'zip', files, zip: `${s.basename}-chops.zip` }, exportSeq: s.exportSeq + 1 };
+      }
+      default: return s;
+    }
+  }
+
+  function dist(r, f) { return f < r.start ? r.start - f : f > r.end ? f - r.end : 0; }
+  function stopAll(s) { return s.play ? { ...s, play: null, playSeq: s.playSeq + 1, returnPoint: null } : s; }
+  function fixActive(n) {
+    if (n.activeId != null && !find(n, n.activeId)) {
+      const list = ordered(n);
+      if (!list.length) return { ...n, activeId: null, selected: [], mode: n.mode === 'select' ? 'playhead' : n.mode };
+      n = { ...n, activeId: list[0].id };
+    }
+    return { ...n, selected: n.selected.filter(id => find(n, id)) };
+  }
+  function audition(s, frame, side) {
+    const w = Math.round(s.settings.auditionMs / 1000 * SR);
+    const range = side === 'start' ? { start: frame, end: Math.min(s.frames, frame + w) } : { start: Math.max(0, frame - w), end: frame };
+    if (range.end <= range.start) return s;
+    return { ...s, play: { kind: 'audition', ...range, side }, playSeq: s.playSeq + 1 };
+  }
+
+  return { SR, initial, keyToAction, reduce, ordered, displayName, filenames, sanitize, stepFrames, focusFrame, pad };
+})();
+if (typeof module !== 'undefined') module.exports = Chopper;
+</script>
+
+<script>
+// =====================================================================
+// PAGE: throwaway shell. Audio transport, canvas, panels, walkthroughs.
+// =====================================================================
+const SR = Chopper.SR;
+const DUR = 30;
+const FRAMES = DUR * SR;
+let S = Chopper.initial(FRAMES, 'rec');
+const logLines = [];
+function log(t) { logLines.unshift(`${new Date().toISOString().slice(11, 23)}  ${t}`); if (logLines.length > 80) logLines.length = 80; }
+
+// ---------- synthesized test signal ----------
+const mono = new Float32Array(FRAMES);
+(function synth() {
+  for (let i = 0; i < FRAMES; i++) {
+    const t = i / SR;
+    let v = 0;
+    if (t < 10) v = 0.5 * Math.sin(2 * Math.PI * 55 * t) + 0.05 * Math.sin(2 * Math.PI * 220 * t);
+    else if (t < 20) {
+      const local = (t - 10) % 0.5, n = Math.floor((t - 10) / 0.5);
+      if (local < 0.25) {
+        const env = Math.exp(-local / 0.03), env2 = Math.exp(-local / 0.08);
+        const noise = (Math.random() * 2 - 1) * env * (n % 2 ? 0.25 : 0.6);
+        const f = 60 + 140 * Math.exp(-local / 0.02);
+        v = noise + (n % 2 ? 0.6 : 0.3) * env2 * Math.sin(2 * Math.PI * f * local * (1 + n * 0.07));
+      }
+    } else v = 0.4 * Math.sin(2 * Math.PI * 440 * t) * (0.6 + 0.4 * Math.sin(2 * Math.PI * 2 * t));
+    mono[i] = v;
+  }
+})();
+
+// ---------- audio transport ----------
+let ctx = null, buffer = null;
+const T = { node: null, gain: null, t0: 0, from: 0, kind: null, passLen: 0, seq: -1, downAt: 0 };
+const M = { firstSpace: null, spaceLat: [], seek: [], file: '' };
+function ensureCtx() {
+  if (ctx) return;
+  ctx = new AudioContext({ sampleRate: SR });
+  buffer = ctx.createBuffer(2, FRAMES, SR);
+  buffer.copyToChannel(mono, 0); buffer.copyToChannel(mono, 1);
+  if (ctx.state !== 'running') ctx.resume();
+}
+function sliceBuffer(start, end) {
+  const b = ctx.createBuffer(2, end - start, SR);
+  const part = mono.subarray(start, end);
+  b.copyToChannel(part, 0); b.copyToChannel(part, 1);
+  return b;
+}
+function killNode(ramp) {
+  if (!T.node) return;
+  const node = T.node, gain = T.gain; T.node = null; T.gain = null; T.kind = null;
+  node.onended = null;
+  if (ramp) {
+    const now = ctx.currentTime;
+    if (gain.gain.cancelAndHoldAtTime) gain.gain.cancelAndHoldAtTime(now); else gain.gain.cancelScheduledValues(now);
+    gain.gain.setValueAtTime(gain.gain.value, now);
+    gain.gain.linearRampToValueAtTime(0, now + 0.008);
+    node.stop(now + 0.01);
+  } else { try { node.stop(); } catch (e) {} }
+}
+function startNode(buf, { offset = 0, loop = false, loopStart = 0, loopEnd = 0, stopAfter = null, kind, base = 0 }) {
+  killNode(false);
+  const node = ctx.createBufferSource(); node.buffer = buf;
+  const gain = ctx.createGain(); node.connect(gain); gain.connect(ctx.destination);
+  const lead = 0.008, t0 = ctx.currentTime + lead;
+  if (loop) { node.loop = true; node.loopStart = loopStart; node.loopEnd = loopEnd; }
+  node.start(t0, offset);
+  if (stopAfter != null) node.stop(t0 + stopAfter);
+  node.onended = () => { if (T.node === node) { T.node = null; T.kind = null; dispatch({ type: 'playbackEnded' }, 'transport'); } };
+  Object.assign(T, { node, gain, t0, from: offset, kind, base });
+  return t0;
+}
+function applyPlay() {
+  if (S.playSeq === T.seq) return; T.seq = S.playSeq;
+  const p = S.play;
+  if (!p) { killNode(true); return; }
+  ensureCtx();
+  if (p.kind === 'playhead') {
+    const t0 = startNode(buffer, { offset: p.from / SR, kind: 'playhead' });
+    if (T.downAt) { M.spaceLat.push((t0 - ctx.currentTime) * 1000 + (performance.now() - T.downAt)); T.downAt = 0; }
+    if (M.firstSpace == null) M.firstSpace = ctx.state;
+    log(`play from ${fmt(p.from)}  ctx.state=${ctx.state}`);
+    return;
+  }
+  if (p.kind === 'preview') {
+    const passLen = (p.end - p.start) / SR;
+    if (p.hold) {
+      if (T.kind === 'preview') return;
+      startNode(buffer, { offset: p.start / SR, loop: true, loopStart: p.start / SR, loopEnd: p.end / SR, kind: 'preview' });
+      T.passLen = passLen; T.downAt = performance.now();
+      log(`preview loop ${fmt(p.start)} to ${fmt(p.end)} (${passLen.toFixed(3)} s per pass)`);
+    } else {
+      if (T.kind !== 'preview' || !T.node) return;
+      const held = performance.now() - T.downAt;
+      const elapsed = ctx.currentTime - T.t0;
+      if (elapsed < T.passLen || held < S.settings.tapMs) {
+        const passes = Math.max(1, Math.ceil(elapsed / T.passLen));
+        T.node.stop(T.t0 + T.passLen * passes); // frame-exact end of the current pass
+        log(`release after ${held.toFixed(0)} ms: finishing pass ${passes}`);
+      } else {
+        log(`release after ${held.toFixed(0)} ms: stopping now with 8 ms ramp`);
+        killNode(true);
+        dispatch({ type: 'playbackEnded' }, 'transport');
+      }
+    }
+    return;
+  }
+  if (p.kind === 'audition') {
+    const buf = sliceBuffer(p.start, p.end);
+    startNode(buf, { stopAfter: (p.end - p.start) / SR, kind: 'audition', base: p.start });
+    log(`audition ${p.side} anchor: ${fmt(p.start)} to ${fmt(p.end)}${p.side === 'end' ? ' (stops dead at the anchor)' : ''}`);
+  }
+}
+function playPosition() {
+  if (!T.node || !ctx) return null;
+  const el = ctx.currentTime - T.t0; if (el < 0) return T.base + T.from * SR; // during the scheduling lead, sit at the start point
+  if (T.kind === 'preview') return (T.node.loopStart + (el % T.passLen)) * SR;
+  if (T.kind === 'audition' || T.kind === 'export') return T.base + el * SR; // sliced buffer: base frame plus elapsed
+  return T.from * SR + el * SR;
+}
+
+// ---------- export ----------
+let lastExport = null;
+function applyExport() {
+  if (!S.exportReq || S.exportSeq === applyExport.seq) return; applyExport.seq = S.exportSeq;
+  ensureCtx();
+  const req = S.exportReq;
+  const rows = req.files.map(({ region, file, collided }) => ({ file, collided, start: region.start, end: region.end, region }));
+  lastExport = { kind: req.kind, zip: req.zip, rows };
+  const first = rows[0];
+  startNode(sliceBuffer(first.start, first.end), { stopAfter: (first.end - first.start) / SR, kind: 'export', base: first.start });
+  downloadWav(first.file, mono.subarray(first.start, first.end));
+  showToast(req.kind === 'zip' ? `Exported ${rows.length} chop${rows.length > 1 ? 's' : ''} to ${req.zip} (playing the first)` : `Exported ${first.file} (playing it)`);
+  log(`export ${req.kind}: ` + rows.map(r => r.file).join(', '));
+}
+function downloadWav(name, samples) {
+  const n = samples.length, bytes = 44 + n * 2, dv = new DataView(new ArrayBuffer(bytes));
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); dv.setUint32(4, bytes - 8, true); w(8, 'WAVE'); w(12, 'fmt '); dv.setUint32(16, 16, true);
+  dv.setUint16(20, 1, true); dv.setUint16(22, 1, true); dv.setUint32(24, SR, true); dv.setUint32(28, SR * 2, true);
+  dv.setUint16(32, 2, true); dv.setUint16(34, 16, true); w(36, 'data'); dv.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) dv.setInt16(44 + i * 2, Math.max(-1, Math.min(1, samples[i])) * 32767, true);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([dv], { type: 'audio/wav' })); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
+// ---------- dispatch ----------
+function dispatchQuiet(action) { S = Chopper.reduce(S, action); }
+function dispatch(action, source) {
+  const prev = S;
+  S = Chopper.reduce(S, action);
+  if (S !== prev) {
+    if (source !== 'transport') log(`${source || 'key'} -> ${action.type}${Object.keys(action).filter(k => k !== 'type').map(k => ` ${k}=${action[k]}`).join('')}`);
+    applyPlay(); applyExport(); render(prev);
+  }
+}
+function keyEvent(type, e) {
+  return { type, code: e.code, shift: e.shiftKey, alt: e.altKey, meta: e.metaKey, ctrl: e.ctrlKey, repeat: e.repeat };
+}
+window.addEventListener('keydown', e => {
+  if (S.prompt) return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.code === 'Space' || e.code === 'Tab') e.preventDefault(); // never scroll the page or move focus
+  const a = Chopper.keyToAction(S, keyEvent('down', e));
+  if (!a) return;
+  e.preventDefault();
+  if (a.type === 'playToggle') T.downAt = performance.now();
+  dispatch(a, `key ${describeKey(e)}`);
+});
+window.addEventListener('keyup', e => {
+  if (S.prompt) return;
+  const a = Chopper.keyToAction(S, keyEvent('up', e));
+  if (a) { e.preventDefault(); dispatch(a, `keyup ${describeKey(e)}`); }
+});
+function describeKey(e) { return (e.metaKey ? 'Cmd+' : '') + (e.ctrlKey ? 'Ctrl+' : '') + (e.altKey ? 'Opt+' : '') + (e.shiftKey ? 'Shift+' : '') + e.code.replace('Key', '').replace('Bracket', ''); }
+// synthetic keys for walkthrough buttons: 'Shift+KeyI', 'Space', 'Space:hold'
+function press(spec) {
+  const hold = spec.endsWith(':hold'); spec = spec.replace(':hold', '');
+  const parts = spec.split('+'); const code = parts.pop();
+  const e = { code, shiftKey: parts.includes('Shift'), altKey: parts.includes('Opt'), metaKey: parts.includes('Cmd'), ctrlKey: parts.includes('Ctrl'), repeat: false };
+  const a = Chopper.keyToAction(S, keyEvent('down', e));
+  if (a) { if (a.type === 'playToggle') T.downAt = performance.now(); dispatch(a, `button ${describeKey(e)}`); }
+  const up = () => { const u = Chopper.keyToAction(S, keyEvent('up', e)); if (u) dispatch(u, `button-up ${describeKey(e)}`); };
+  setTimeout(up, hold ? 900 : 60);
+}
+
+// ---------- prompt ----------
+const promptEl = document.getElementById('prompt'), promptInput = document.getElementById('promptInput'), promptPreview = document.getElementById('promptPreview');
+promptInput.addEventListener('input', () => { dispatch({ type: 'promptInput', value: promptInput.value }, 'prompt'); });
+promptInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); dispatch({ type: 'promptCommit' }, 'prompt'); }
+  else if (e.key === 'Escape') { e.preventDefault(); dispatch({ type: 'promptCancel' }, 'prompt'); }
+  e.stopPropagation();
+});
+function renderPrompt(prev) {
+  const p = S.prompt;
+  if (p && !prev.prompt) { promptEl.classList.add('open'); promptInput.value = p.value; setTimeout(() => { promptInput.focus(); promptInput.select(); }, 0); }
+  if (!p && prev.prompt) { promptEl.classList.remove('open'); promptInput.blur(); }
+  if (p) {
+    const typed = p.value.trim(); const s = Chopper.sanitize(typed);
+    document.getElementById('promptLabel').textContent = p.forDraft ? (p.exportAfter ? 'Name this region, then it saves and exports' : 'Name this region (the name is the filename)') : 'Rename region';
+    promptPreview.textContent = typed === '' ? `empty: automatic name ${p.def}.wav` : (typed === p.def ? 'automatic name; renumbers by position at export' : (s !== typed ? `will export as ${s || p.def}.wav` : ''));
+  }
+}
+
+// ---------- toast / shake ----------
+const toastEl = document.getElementById('toast'); let toastTimer = null;
+function showToast(text) { toastEl.textContent = text; toastEl.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200); }
+const waveWrap = document.getElementById('wavewrap');
+function renderToastShake(prev) {
+  if (S.toast && S.toast !== prev.toast) showToast(S.toast.text);
+  if (S.shake !== prev.shake) { waveWrap.classList.remove('shake'); void waveWrap.offsetWidth; waveWrap.classList.add('shake'); }
+}
+
+// ---------- canvas ----------
+const canvas = document.getElementById('wave'), cx = canvas.getContext('2d');
+function fmt(f) { return (f / SR).toFixed(3) + 's'; }
+function xOf(frame) { return (frame - S.view.start) / S.view.win * canvas.clientWidth; }
+function frameOf(x) { return S.view.start + x / canvas.clientWidth * S.view.win; }
+let dragging = false;
+canvas.addEventListener('mousedown', e => { dragging = true; dispatch({ type: 'seekTo', frame: frameOf(e.offsetX) }, 'mouse'); });
+window.addEventListener('mousemove', e => { if (dragging) dispatch({ type: 'seekTo', frame: frameOf(e.clientX - canvas.getBoundingClientRect().left) }, 'mouse'); });
+window.addEventListener('mouseup', () => dragging = false);
+function drawWave() {
+  const W = canvas.clientWidth, H = canvas.clientHeight, dpr = devicePixelRatio || 1;
+  if (canvas.width !== W * dpr || canvas.height !== H * dpr) { canvas.width = W * dpr; canvas.height = H * dpr; }
+  cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cx.fillStyle = '#171a21'; cx.fillRect(0, 0, W, H);
+  const mid = H * 0.55, amp = H * 0.38;
+  const spp = S.view.win / W;
+  const list = Chopper.ordered(S);
+  list.forEach((r, i) => {
+    const x0 = xOf(r.start), x1 = xOf(r.end); if (x1 < 0 || x0 > W) return;
+    const act = r.id === S.activeId && S.mode === 'select', sel = S.selected.includes(r.id);
+    cx.fillStyle = act ? 'rgba(90,209,255,.28)' : 'rgba(255,180,84,.14)';
+    cx.fillRect(x0, 0, Math.max(1, x1 - x0), H);
+    cx.strokeStyle = act ? '#5ad1ff' : 'rgba(255,180,84,.6)'; cx.lineWidth = 1;
+    cx.strokeRect(x0 + .5, .5, Math.max(1, x1 - x0) - 1, H - 1);
+    cx.fillStyle = act ? '#5ad1ff' : '#ffb454'; cx.font = '11px Menlo, monospace';
+    cx.fillText((sel ? '[x] ' : '') + Chopper.displayName(S, r) + (r.name == null ? ' (auto)' : ''), x0 + 4, 12 + (i % 3) * 12);
+  });
+  cx.strokeStyle = '#9aa3b5'; cx.lineWidth = 1; cx.beginPath();
+  if (spp >= 1) {
+    for (let x = 0; x < W; x++) {
+      const a = Math.floor(S.view.start + x * spp), b = Math.min(FRAMES, Math.floor(a + spp) + 1);
+      if (a >= FRAMES) break;
+      let mn = 1, mx = -1; for (let i = a; i < b; i++) { const v = mono[i]; if (v < mn) mn = v; if (v > mx) mx = v; }
+      cx.moveTo(x + .5, mid - mx * amp); cx.lineTo(x + .5, mid - mn * amp + 1);
+    }
+    cx.stroke();
+  } else {
+    const a = Math.floor(S.view.start), b = Math.min(FRAMES, Math.ceil(S.view.start + S.view.win) + 1);
+    for (let i = a; i < b; i++) { const x = xOf(i), y = mid - mono[i] * amp; i === a ? cx.moveTo(x, y) : cx.lineTo(x, y); }
+    cx.stroke();
+    if (1 / spp > 6) { cx.fillStyle = '#e6e6e6'; for (let i = a; i < b; i++) cx.fillRect(xOf(i) - 1, mid - mono[i] * amp - 1, 2, 2); }
+  }
+  cx.strokeStyle = '#2a2f3a'; cx.beginPath(); cx.moveTo(0, mid); cx.lineTo(W, mid); cx.stroke();
+  cx.fillStyle = '#8a8f9c'; cx.font = '10px Menlo, monospace';
+  const secs = S.view.win / SR; const stepS = secs > 12 ? 2 : secs > 5 ? 1 : secs > 1.5 ? 0.25 : secs > 0.3 ? 0.05 : secs > 0.05 ? 0.01 : 0.001;
+  for (let t = Math.ceil(S.view.start / SR / stepS) * stepS; t * SR < S.view.start + S.view.win; t += stepS) { const x = xOf(t * SR); cx.fillRect(x, H - 14, 1, 4); cx.fillText(t.toFixed(stepS < 0.01 ? 3 : stepS < 1 ? 2 : 0) + 's', x + 2, H - 4); }
+  if (S.mode === 'insert' && S.draft) {
+    const d = S.draft;
+    if (d.start != null && d.end != null) { cx.fillStyle = 'rgba(123,216,143,.18)'; cx.fillRect(xOf(d.start), 0, Math.max(1, xOf(d.end) - xOf(d.start)), H); }
+    for (const side of ['start', 'end']) {
+      if (d[side] == null) continue;
+      const x = xOf(d[side]), act = d.active === side;
+      cx.strokeStyle = act ? '#7bd88f' : 'rgba(123,216,143,.6)'; cx.lineWidth = act ? 2 : 1;
+      cx.beginPath(); cx.moveTo(x, 0); cx.lineTo(x, H); cx.stroke();
+      cx.fillStyle = act ? '#7bd88f' : 'rgba(123,216,143,.6)';
+      cx.beginPath(); if (side === 'start') { cx.moveTo(x, 0); cx.lineTo(x + 9, 0); cx.lineTo(x, 9); } else { cx.moveTo(x, 0); cx.lineTo(x - 9, 0); cx.lineTo(x, 9); } cx.fill();
+      cx.font = '11px Menlo, monospace'; cx.fillText(side + (act ? ' (active)' : ''), side === 'start' ? x + 4 : x - 70, H - 20);
+    }
+  }
+  if (S.mode === 'playhead') { // the playhead shows only in Playhead mode; anchors or the active region are the focus otherwise
+    const px = xOf(S.playhead);
+    cx.strokeStyle = '#ff5a5a'; cx.lineWidth = 2; cx.beginPath(); cx.moveTo(px, 0); cx.lineTo(px, H); cx.stroke();
+  }
+  const pp = playPosition();
+  if (pp != null) {
+    // play cursor colour by kind: white = Space play, green = audition, blue = region preview, amber = export playback
+    const colour = { playhead: '#ffffff', audition: '#7bd88f', preview: '#5ad1ff', export: '#ffb454' }[T.kind] || '#fff';
+    const x = xOf(pp); cx.setLineDash([4, 3]); cx.strokeStyle = colour; cx.lineWidth = T.kind === 'playhead' ? 1 : 2;
+    cx.beginPath(); cx.moveTo(x, 0); cx.lineTo(x, H); cx.stroke(); cx.setLineDash([]);
+    if (T.kind !== 'playhead') { cx.fillStyle = colour; cx.font = '10px Menlo, monospace'; cx.fillText(T.kind, x + 4, 22); }
+  }
+  if (S.returnPoint != null) { const x = xOf(S.returnPoint); cx.fillStyle = '#ff5a5a'; cx.fillText('return', x + 4, H - 32); }
+}
+(function loop() { drawWave(); requestAnimationFrame(loop); })();
+
+// ---------- status + state panel ----------
+function fmtStep(frames) { const ms = frames / SR * 1000; return frames <= 1 ? '1 smp' : ms < 1 ? `${frames} smp` : ms < 1000 ? `${ms.toFixed(ms < 10 ? 1 : 0)} ms` : `${(ms / 1000).toFixed(2)} s`; }
+function renderStatus() {
+  dispatchQuiet({ type: 'setViewPx', px: canvas.clientWidth || 1000 });
+  const fine = fmtStep(Chopper.stepFrames(S, 'fine'));
+  const plain = fmtStep(Chopper.stepFrames(S, 'plain')), coarse = fmtStep(Chopper.stepFrames(S, 'coarse'));
+  const spp = S.view.win / Math.max(1, canvas.clientWidth);
+  document.getElementById('status').innerHTML =
+    `<span class="mode ${S.mode}">${{ playhead: 'PLAYHEAD', insert: 'INSERT REGION', select: 'REGION SELECT' }[S.mode]}</span>` +
+    `<span>playhead <b>${fmt(S.playhead)}</b></span>` +
+    `<span>step h/l <b>${plain}</b> · H/L <b>${fine}</b> · opt+h/l <b>${coarse}</b></span>` +
+    `<span>zoom <b>${(S.view.win / SR).toFixed(3)}s</b> across (${spp >= 1 ? spp.toFixed(0) + ' smp/px' : (1 / spp).toFixed(1) + ' px/smp'})</span>` +
+    `<span>regions <b>${S.regions.length}</b> · selected <b>${S.selected.length}</b></span>` +
+    `<span>${S.play ? '<b>playing ' + S.play.kind + (S.play.kind === 'preview' ? (S.play.hold ? ' (held, looping)' : ' (released)') : '') + '</b>' : 'stopped'}</span>`;
+}
+let prevVals = {};
+function renderState() {
+  const d = S.draft;
+  const vals = {
+    'Mode': S.mode, 'Playhead': `${fmt(S.playhead)} (frame ${S.playhead})`, 'Return point': S.returnPoint == null ? '-' : fmt(S.returnPoint),
+    'Playing': S.play ? `${S.play.kind}${S.play.start != null ? ` ${fmt(S.play.start)} to ${fmt(S.play.end)}` : ''}${S.play.kind === 'preview' ? (S.play.hold ? ' held' : ' released') : ''}` : '-',
+    'Draft': d ? `start ${d.start == null ? 'null' : fmt(d.start)} · end ${d.end == null ? 'null' : fmt(d.end)} · active <b>${d.active}</b>${d.editingId ? ' · editing #' + d.editingId : ''}` : '-',
+    'Active region': S.activeId == null ? '-' : Chopper.displayName(S, S.regions.find(r => r.id === S.activeId)),
+    'Selected': S.selected.length ? S.selected.map(id => Chopper.displayName(S, S.regions.find(r => r.id === id))).join(', ') : '-',
+    'Undo / redo': `${S.undo.length} / ${S.redo.length}`, 'Last action': S.lastChange,
+  };
+  let html = '<dl>' + Object.entries(vals).map(([k, v]) => `<dt>${k}</dt><dd class="${prevVals[k] !== undefined && prevVals[k] !== v ? 'changed' : ''}">${v}</dd>`).join('') + '</dl>';
+  prevVals = vals;
+  const files = Chopper.filenames(S, S.regions);
+  html += '<table><tr><th>#</th><th>name</th><th>start to end</th><th>len</th><th>export filename</th></tr>' +
+    Chopper.ordered(S).map((r, i) => { const f = files.find(x => x.region.id === r.id); return `<tr class="${r.id === S.activeId && S.mode === 'select' ? 'active' : ''}"><td>${i}</td><td>${S.selected.includes(r.id) ? '[x] ' : ''}${Chopper.displayName(S, r)}${r.name == null ? ' <span class="note">(auto)</span>' : ''}</td><td>${fmt(r.start)} ${fmt(r.end)}</td><td>${((r.end - r.start) / SR).toFixed(3)}s</td><td style="color:${f.collided ? '#ff5a5a' : 'inherit'}">${f.file}${f.collided ? ' (collision)' : ''}</td></tr>`; }).join('') + '</table>';
+  if (lastExport) html += `<h2 style="margin-top:12px">Last export (${lastExport.kind}${lastExport.zip ? ': ' + lastExport.zip : ''})</h2><table><tr><th>file</th><th>start frame</th><th>end frame</th></tr>` + lastExport.rows.map(r => `<tr><td>${r.file}</td><td>${r.start}</td><td>${r.end}</td></tr>`).join('') + '</table>';
+  document.getElementById('state').innerHTML = html;
+}
+function render(prev) { renderStatus(); renderState(); renderPrompt(prev); renderToastShake(prev); renderLog(); renderSteps(); renderMeasure(); }
+function renderLog() { const el = document.getElementById('log'); if (el) el.textContent = logLines.join('\n'); }
+
+// ---------- tabs: walkthroughs, keymap, settings, measurements, log ----------
+const K = (k) => `<kbd>${k}</kbd>`;
+const R = 'KeyL';
+const walkthroughs = [
+  { title: '1 Mark and name a chop', intro: 'The core loop. Watch the draft anchors and the status bar. Both anchors appear at once; the one you are handed is active.',
+    steps: [
+      ['Press Opt+l four times (10% of the window each): past 10 s, into the drums', ['Opt+KeyL', 'Opt+KeyL', 'Opt+KeyL', 'Opt+KeyL']],
+      ['Press i: Insert Region mode, start anchor at the playhead, end anchor 20% of the screen later and active', ['KeyI']],
+      ['Press o twice: the active anchor toggles to start and back to end', ['KeyO', 'KeyO']],
+      ['Press H three times: nudge the end earlier by the fine step', ['Shift+KeyH', 'Shift+KeyH', 'Shift+KeyH']],
+      ['Press a: hear the last 300 ms leading into the end anchor', ['KeyA']],
+      ['Press J: zoom in 80% around the active anchor (press again to reach the one-second floor)', ['Shift+KeyJ']],
+      ['Press s: the save prompt opens with the default name highlighted. Type a name or just press Enter', ['KeyS']],
+    ] },
+  { title: '2 Export one chop', intro: 'Export the active region as a single WAV to Downloads and hear exactly what the file contains.',
+    steps: [
+      ['Press K until fully zoomed out, then Opt+l once: near 3 s', ['Shift+KeyK', 'Shift+KeyK', 'Shift+KeyK', 'Opt+KeyL']],
+      ['Press i, then s: a draft with the prompt open. Press Enter yourself', ['KeyI', 'KeyS']],
+      ['Press Tab: select it', ['Tab']],
+      ['Press E (Shift+e): the chop downloads and plays, cursor showing where you are in it', ['Shift+KeyE']],
+    ] },
+  { title: '3 Loop a hit', intro: 'In Region Select mode, a tap of Space plays the active region once; holding loops it and releasing stops.',
+    steps: [
+      ['Press Tab (needs a region; do walkthrough 1 first)', ['Tab']],
+      ['Tap Space: one pass, then it stops', ['Space']],
+      ['Hold Space (the button holds 900 ms): it loops, then stops on release', ['Space:hold']],
+      ['Press p: back to Playhead mode at the region start. P would go to its end', ['KeyP']],
+    ] },
+  { title: '4 Overlap and batch export', intro: 'Regions may overlap. h/l cycle in start-time order. Shift+Space marks regions for the zip.',
+    steps: [
+      ['Press I (Shift+i): end anchor at the playhead, start anchor 20% of the screen earlier and active', ['Shift+KeyI']],
+      ['Press Opt+h: coarse step pulls the start well before the other region', ['Opt+KeyH']],
+      ['Press s, then Enter: an overlapping region', ['KeyS']],
+      ['Press Tab, then l, then h: cycle by start time, wrapping', ['Tab', 'KeyL', 'KeyH']],
+      ['Press Shift+Space, then Cmd+E: only the selected one is zipped, the set clears', ['Shift+Space', 'Cmd+KeyE']],
+      ['Press Cmd+E again with nothing selected: everything is zipped', ['Cmd+KeyE']],
+    ] },
+  { title: '5 Edit, rename, delete, undo', intro: 'e reopens a region in Insert mode with its bounds; r renames only; x deletes; u undoes.',
+    steps: [
+      ['Press Tab, then e: draft has the region bounds, end anchor active', ['Tab', 'KeyE']],
+      ['Press l, then s, then Enter: the bounds change is one undo step', [R, 'KeyS']],
+      ['Press Tab, then r: rename prompt with the existing name highlighted. Type 808/kick and watch the preview', ['Tab', 'KeyR']],
+      ['Press x: region deleted, next becomes active', ['KeyX']],
+      ['Press u: it is back. Ctrl+R redoes', ['KeyU']],
+    ] },
+  { title: '6 Tab with no regions', intro: 'Delete everything, then Tab: the waveform shakes and a toast says what to do.',
+    steps: [
+      ['Press Tab, then x until none are left', ['Tab', 'KeyX', 'KeyX', 'KeyX', 'KeyX', 'KeyX']],
+      ['Press Tab in Playhead mode', ['Tab']],
+    ] },
+];
+const keymap = {
+  'Playhead mode': [['h / l', 'scrub by 1% of the visible window ([ ] also work)'], ['H / L', 'scrub by one pixel at the current zoom (see Settings)'], ['opt+h / opt+l', 'scrub by 10% of the visible window'], ['j / k', 'zoom in / out 20% around the playhead'], ['J', 'zoom in 80%, down to a one-second window'], ['K', 'zoom out 80%, up to the whole file'], ['Space', 'play from the playhead; again stops and snaps back (Space stops any playback in any mode)'], ['scrub while playing', 'restarts at the new spot'], ['i / I', 'Insert Region: i anchors start here and hands you the end; I anchors end here and hands you the start'], ['a / A', 'audition 300 ms ahead of / behind the playhead'], ['Tab', 'Region Select (shakes if none)'], ['u / Ctrl+R / Cmd+Z', 'undo / redo'], ['Cmd+E', 'export zip'], ['mouse drag', 'move the playhead']],
+  'Insert Region mode': [['h l H L opt+h opt+l', 'move the active anchor'], ['mouse drag', 'move the active anchor'], ['j k J K', 'zoom around the active anchor'], ['o', 'toggle which anchor is active'], ['a', 'audition the active anchor (start: forward; end: into it)'], ['Space', 'preview the draft (one anchor: audition)'], ['s', 'save: name prompt'], ['S', 'name, save, export to Downloads, back to Playhead mode'], ['Esc', 'discard'], ['Enter in prompt', 'save, back to Playhead at the region end'], ['Esc in prompt', 'discard prompt and draft']],
+  'Region Select mode': [['h / l', 'previous / next region by start time'], ['e', 'edit bounds'], ['E', 'export this region to Downloads'], ['Space', 'tap: play once; hold: loop'], ['Shift+Space', 'toggle in Selected Regions'], ['A / Shift+A', 'select all / clear'], ['p / P', 'Playhead mode at start / end'], ['x', 'delete'], ['r', 'rename'], ['u / Ctrl+R', 'undo / redo'], ['Cmd+E', 'zip selected, or all'], ['Esc / Tab', 'back to Playhead mode']],
+};
+let currentTab = 0, stepDone = {};
+function buildTabs() {
+  const bar = document.getElementById('tabbar'), tabs = document.getElementById('tabs');
+  const names = [...walkthroughs.map(w => w.title), 'Keymap', 'Settings', 'Measurements', 'Log'];
+  bar.innerHTML = names.map((n, i) => `<button data-i="${i}">${n}</button>`).join('');
+  bar.querySelectorAll('button').forEach(b => b.onclick = () => { currentTab = +b.dataset.i; showTab(); b.blur(); });
+  let html = walkthroughs.map((w, wi) => `<div class="tab" data-i="${wi}"><p class="note">${w.intro}</p>` +
+    w.steps.map((st, si) => `<div class="step" data-w="${wi}" data-s="${si}"><span class="n">${si + 1}</span><span class="t">${st[0]}</span><button class="do" data-w="${wi}" data-s="${si}">Do it for me</button></div>`).join('') + `<p class="note" style="margin-top:8px">Or just press the keys. The buttons replay the same key events.</p></div>`).join('');
+  html += `<div class="tab" data-i="${walkthroughs.length}">` + Object.entries(keymap).map(([m, rows]) => `<h2 style="margin-top:8px">${m}</h2><table class="km">${rows.map(r => `<tr><td>${K(r[0])}</td><td>${r[1]}</td></tr>`).join('')}</table>`).join('') + '</div>';
+  html += `<div class="tab settings" data-i="${walkthroughs.length + 1}">
+    <label>Fine step H / L: <select id="setFine"><option value="1px" selected>1 pixel at current zoom</option><option value="1sample">1 sample</option><option value="1ms">1 ms</option><option value="10ms">10 ms</option></select></label>
+    <label>Plain step h / l as % of the visible window: <select id="setPlain"><option>0.5</option><option selected>1</option><option>2</option><option>5</option></select></label>
+    <label>Coarse step opt+h / opt+l as % of the visible window: <select id="setCoarse"><option selected>10</option><option>20</option><option>50</option></select></label>
+    <label>Audition length (ms): <select id="setAud"><option>200</option><option selected>300</option><option>500</option></select></label>
+    <label>Gap between the anchors when i / I creates the draft, as % of the visible window: <select id="setGap"><option>10</option><option selected>20</option><option>30</option><option>50</option></select></label>
+    <label>Tap threshold (ms), a Space shorter than this always plays one full pass: <select id="setTap"><option>150</option><option selected>200</option><option>300</option></select></label>
+    <p class="note">These exist only so the ladder can be felt. The decision goes in the ticket answer.</p></div>`;
+  html += `<div class="tab" data-i="${walkthroughs.length + 2}"><div id="measure"></div>
+    <div id="drop">Drop a real WAV here to measure media-element seek latency (10 random seeks, nothing leaves the machine)</div></div>`;
+  html += `<div class="tab" data-i="${walkthroughs.length + 3}"><div id="log"></div></div>`;
+  tabs.innerHTML = html;
+  tabs.querySelectorAll('button.do').forEach(b => b.onclick = () => {
+    const w = walkthroughs[+b.dataset.w], keys = w.steps[+b.dataset.s][1];
+    let t = 0; keys.forEach(k => { setTimeout(() => press(k), t); t += k.endsWith(':hold') ? 1100 : 140; });
+    stepDone[b.dataset.w + ':' + b.dataset.s] = true; renderSteps(); b.blur();
+  });
+  const bind = (id, key, num) => document.getElementById(id).onchange = e => { dispatch({ type: 'setSetting', key, value: num ? +e.target.value : e.target.value }, 'settings'); e.target.blur(); };
+  bind('setFine', 'fine', false); bind('setPlain', 'plainPct', true); bind('setCoarse', 'coarsePct', true); bind('setAud', 'auditionMs', true); bind('setGap', 'gapPct', true); bind('setTap', 'tapMs', true);
+  const drop = document.getElementById('drop');
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+  drop.ondragleave = () => drop.classList.remove('over');
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) measureSeek(f); };
+  showTab();
+}
+function showTab() {
+  document.querySelectorAll('#tabbar button').forEach(b => b.classList.toggle('on', +b.dataset.i === currentTab));
+  document.querySelectorAll('#tabs .tab').forEach(t => t.classList.toggle('on', +t.dataset.i === currentTab));
+  renderMeasure(); renderLog();
+}
+function renderSteps() { document.querySelectorAll('.step').forEach(el => el.classList.toggle('done', !!stepDone[el.dataset.w + ':' + el.dataset.s])); }
+function renderMeasure() {
+  const el = document.getElementById('measure'); if (!el) return;
+  const med = a => a.length ? [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)].toFixed(1) : '-';
+  el.innerHTML = `<dl>
+    <dt>AudioContext</dt><dd>${ctx ? `${ctx.state}, ${ctx.sampleRate} Hz, baseLatency ${(ctx.baseLatency * 1000).toFixed(1)} ms, outputLatency ${(ctx.outputLatency * 1000).toFixed(1)} ms` : 'not created yet (press Space)'}</dd>
+    <dt>ctx.state after first Space</dt><dd>${M.firstSpace ?? '-'}</dd>
+    <dt>Space to scheduled start</dt><dd>${M.spaceLat.length ? `median ${med(M.spaceLat)} ms over ${M.spaceLat.length} (keydown to scheduled t0, excludes output latency)` : 'press Space in Playhead mode a few times'}</dd>
+    <dt>Loop seam</dt><dd>listen: hold Space on a region inside the 20 to 30 s tremolo tone. A timing gap would be a hiccup in the tremolo. A phase click at the seam is expected when the region length is not a whole number of cycles.</dd>
+    <dt>Media seek latency</dt><dd>${M.seek.length ? `median ${med(M.seek)} ms, max ${Math.max(...M.seek).toFixed(1)} ms over ${M.seek.length} seeks (${M.file})` : 'drop a WAV below'}</dd>
+  </dl>`;
+}
+async function measureSeek(file) {
+  const a = new Audio(); a.src = URL.createObjectURL(file); a.preload = 'auto'; M.file = `${file.name}, ${(file.size / 1e6).toFixed(0)} MB`; M.seek = [];
+  await new Promise(r => a.addEventListener('loadedmetadata', r, { once: true }));
+  a.muted = true; await a.play().catch(() => {});
+  for (let i = 0; i < 10; i++) {
+    const t = Math.random() * a.duration; const t0 = performance.now();
+    await new Promise(r => { a.addEventListener('seeked', r, { once: true }); a.currentTime = t; });
+    M.seek.push(performance.now() - t0); renderMeasure();
+  }
+  a.pause(); log(`media seek latency median ${[...M.seek].sort((x, y) => x - y)[5].toFixed(1)} ms on ${M.file}`);
+}
+
+buildTabs();
+render(S);
+window.addEventListener('resize', () => renderStatus());
+</script>
+</body>
+</html>
