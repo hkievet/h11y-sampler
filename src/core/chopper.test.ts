@@ -247,6 +247,9 @@ describe('overlap, cycle, select, batch export', () => {
     expect(d.s.selected).toEqual([])
     d.keys('Cmd+KeyE')
     expect(d.s.exportReq!.files.map((f) => f.file)).toEqual(['808_kick.wav', 'rec-01.wav'])
+    d.keys('Cmd+Shift+KeyE')
+    expect(d.s.exportReq).toMatchObject({ kind: 'folder' })
+    expect(d.s.exportReq!.files).toHaveLength(2)
   })
 
   it('A selects all and Shift+A clears', () => {

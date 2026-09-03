@@ -49,7 +49,7 @@ export interface ExportFile {
 }
 
 export interface ExportReq {
-  kind: 'one' | 'zip'
+  kind: 'one' | 'zip' | 'folder'
   files: ExportFile[]
   zip?: string
 }
@@ -138,7 +138,8 @@ export type Action =
   | { type: 'undo' }
   | { type: 'redo' }
   | { type: 'exportOne' }
-  | { type: 'exportBatch' }
+  | { type: 'exportBatch'; to: 'zip' | 'folder' }
+  | { type: 'notify'; text: string }
 
 export const DEFAULT_SETTINGS: Settings = {
   plainPct: 1,
@@ -312,7 +313,7 @@ export function keyToAction(s: State, ev: KeyEvent): Action | null {
   // global
   if (code === 'Space' && !shift && !repeat && s.play) return { type: 'stop' }
   if (meta && code === 'KeyZ') return { type: shift ? 'redo' : 'undo' }
-  if (meta && code === 'KeyE') return { type: 'exportBatch' }
+  if (meta && code === 'KeyE') return { type: 'exportBatch', to: shift ? 'folder' : 'zip' }
   const scrubKey =
     code === 'BracketLeft' ||
     code === 'BracketRight' ||
@@ -591,10 +592,12 @@ export function reduce(prev: State, a: Action): State {
       return {
         ...stopAll(s),
         selected: [],
-        exportReq: { kind: 'zip', files: filenames(s, set), zip: `${s.basename}-chops.zip` },
+        exportReq: { kind: a.to, files: filenames(s, set), zip: `${s.basename}-chops.zip` },
         exportSeq: s.exportSeq + 1,
       }
     }
+    case 'notify':
+      return toast(s, a.text)
   }
 }
 

@@ -1,7 +1,7 @@
 # Export: single WAV, zip, folder write
 
 Type: task
-Status: open
+Status: claimed
 Blocked by:
 
 ## Question

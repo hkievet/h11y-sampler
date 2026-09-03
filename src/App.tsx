@@ -6,6 +6,7 @@ import {
 import { DropZone } from './DropZone'
 import { Waveform, type PlayCursor } from './view/Waveform'
 import { createTransport, type Transport } from './transport/transport'
+import { buildZip, chop, download, pickFolder, ensureWritable, writeToFolder } from './export/export'
 import type { Source } from './source'
 
 // Shell. Until the waveform, Transport, and export land, this drives the
@@ -110,6 +111,35 @@ function Editor({ source }: { source: Source }) {
     const [a, b] = activeRange.split(':').map(Number)
     transport.current?.prepare({ start: a!, end: b! })
   }, [activeRange])
+  // ---- Export: driven by the Core's export intents ----
+  const folder = useRef<FileSystemDirectoryHandle | null>(null) // the Persistence ticket remembers this across reloads
+  useEffect(() => {
+    const req = s.exportReq
+    if (!req || s.exportSeq === 0) return
+    const notify = (text: string) => dispatch({ type: 'notify', text })
+    void (async () => {
+      try {
+        if (req.kind === 'one') {
+          const f = req.files[0]!
+          download(await chop(source, f), f.file)
+          notify(`Exported ${f.file}`)
+        } else if (req.kind === 'zip') {
+          download(await buildZip(source, req.files), req.zip!)
+          notify(`Exported ${req.files.length} chop${req.files.length === 1 ? '' : 's'} to ${req.zip}`)
+        } else {
+          if (!folder.current) folder.current = await pickFolder()
+          if (!folder.current) { notify('No folder chosen.'); return }
+          if (!(await ensureWritable(folder.current))) { notify('No permission to write to that folder.'); return }
+          const names = await writeToFolder(folder.current, source, req.files)
+          notify(`Wrote ${names.length - 1} chop${names.length === 2 ? '' : 's'} to ${folder.current.name}/`)
+        }
+      } catch (e) {
+        notify(`Export failed: ${e instanceof Error ? e.message : String(e)}`)
+      }
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.exportSeq])
+
   const playCursor = (): PlayCursor => {
     const t = transport.current
     const kind = t?.cursorKind()
