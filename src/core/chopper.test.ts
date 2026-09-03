@@ -454,3 +454,21 @@ describe('restore', () => {
     expect(d.s.regions[2]!.id).toBe(6)
   })
 })
+
+// ---------- browser chords pass through ----------
+
+describe('browser chords', () => {
+  it('Cmd+R and Cmd+Shift+R are never claimed, in any mode', () => {
+    const d = new Driver()
+    d.keys('KeyI', 'KeyS'); d.name(null)
+    expect(d.key('KeyR', { meta: true })).toBeNull()
+    expect(d.key('KeyR', { meta: true, shift: true })).toBeNull()
+    d.keys('Tab')
+    expect(d.s.mode).toBe('select')
+    expect(d.key('KeyR', { meta: true })).toBeNull()
+    expect(d.key('KeyR', { meta: true, shift: true })).toBeNull()
+    expect(d.key('KeyC', { meta: true })).toBeNull()
+    expect(d.s.prompt).toBeNull()
+    expect(d.key('KeyR', { ctrl: true })).toEqual({ type: 'redo' })
+  })
+})

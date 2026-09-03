@@ -326,6 +326,10 @@ export function keyToAction(s: State, ev: KeyEvent): Action | null {
   }
   if (code === 'KeyJ' && !meta && !ctrl) return { type: 'zoom', kind: shift ? 'second' : 'in' }
   if (code === 'KeyK' && !meta && !ctrl) return { type: 'zoom', kind: shift ? 'fit' : 'out' }
+  // Any other Cmd chord belongs to the browser (Cmd+R reload, Cmd+Shift+R hard reload, Cmd+C ...).
+  // Ctrl chords likewise, except Ctrl+R redo below.
+  if (meta) return null
+  if (ctrl && code !== 'KeyR') return null
 
   if (s.mode === 'playhead') {
     if (code === 'Space') return repeat ? null : { type: 'playToggle' }

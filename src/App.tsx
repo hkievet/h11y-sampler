@@ -38,6 +38,7 @@ export function App() {
           {source
             ? <>{source.info.name} · {source.info.duration.toFixed(1)} s · {source.info.sampleRate} Hz · {source.info.channels} ch · {source.info.origin === 'wav' ? `${source.info.format.bits}-bit ${source.info.format.kind} passthrough` : 'decoded, 16-bit export'}{source.info.truncated ? ' · truncated' : ''}</>
             : <>Keyboard-first sample chopper. Drop a recording to begin.</>}
+          <span className="build"> · build {__BUILD__}</span>
         </p>
       </header>
       {warning && <div className="toast">{warning}</div>}

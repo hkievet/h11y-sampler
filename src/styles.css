@@ -106,3 +106,4 @@ button.do:disabled { opacity: .5; cursor: default; }
 .km td:first-child { white-space: nowrap; }
 .drop .demo { margin-top: 14px; color: var(--dim); }
 .drop .demo b { color: var(--accent); }
+.build { color: var(--line); font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
