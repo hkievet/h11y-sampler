@@ -57,11 +57,12 @@ spec with nothing left to decide, was reached: see the decisions below.)
 - [Persistence: reload restore and autosave](./issues/16-persistence.md): hand-rolled IndexedDB store; session per fingerprint with the file handle, regions, selection, playhead, view; twenty recent; "Press Enter to reopen" on the drop zone; restore on mount with a same-name fallback and warning; autosave 200 ms after changes; folder handle and settings persisted.
 - [Tutorial page and keymap reference](./issues/17-tutorial-page.md): six walkthroughs with "Do it for me" buttons replaying real key events, the keymap reference, `?` to toggle, and a synthesized demo recording offered on the drop zone so the tutorial works with no file.
 - [Seam A end-to-end tests and deploy](./issues/18-end-to-end-and-deploy.md): seven Playwright tests in real Chromium, green; the first browser run found and fixed the overlay stacking bug; CI runs both seams and deploys `dist/` to GitHub Pages on `main`; README written.
+- [Push to GitHub and enable Pages](./issues/19-push-and-enable-pages.md): public repository created, Pages on the Actions source, first CI run green, live at https://hkievet.github.io/h11y-sampler/.
 
 ## Not yet specified
 
-Nothing. The app is built and tested end to end. One HITL task remains:
-[Push to GitHub and enable Pages](./issues/19-push-and-enable-pages.md).
+Nothing. The destination is reached: the app is built, tested end to end
+in a real browser, and deployed. This map is complete.
 
 ## Out of scope
 

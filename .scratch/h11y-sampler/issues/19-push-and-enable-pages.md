@@ -1,7 +1,7 @@
 # Push to GitHub and enable Pages
 
 Type: task
-Status: open
+Status: resolved
 Blocked by:
 
 ## Question
@@ -19,3 +19,16 @@ the Pages switch. Checklist:
 6. Open the URL, click "try the demo recording", press `i`.
 
 Resolved when the URL is live and recorded here.
+
+## Answer
+
+Done 2026-09-03 with the user's go-ahead, via the GitHub CLI.
+
+- Repository: https://github.com/hkievet/h11y-sampler (public).
+- Pages source set to GitHub Actions via the API (`build_type: workflow`).
+- First `ci` run: type-check, 56 Vitest tests, 7 Playwright tests in
+  Linux Chromium, build, deploy, all green.
+- **Live:** https://hkievet.github.io/h11y-sampler/
+
+One annotation to tidy later: GitHub warns that checkout@v4, setup-node@v4
+and upload-artifact@v4 target Node 20; bump to v5 when convenient.
