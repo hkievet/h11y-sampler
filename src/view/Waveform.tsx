@@ -40,6 +40,7 @@ export function Waveform({ source, s, dispatch, playCursor }: {
   const wsRegions = useRef(new Map<number, WsRegion>())
   const ready = useRef(false)
   const [width, setWidth] = useState(1000)
+  const widthRef = useRef(1000) // the live width; closures created before the first resize must not use the placeholder
   const sRef = useRef(s)
   sRef.current = s
   const detail = useRef<{ key: string; chans: Int16Array[] | null }>({ key: '', chans: null })
@@ -99,6 +100,7 @@ export function Waveform({ source, s, dispatch, playCursor }: {
     const el = box.current!
     const ro = new ResizeObserver(() => {
       const px = Math.max(1, Math.round(el.clientWidth))
+      widthRef.current = px
       setWidth(px)
       dispatch({ type: 'setViewPx', px })
     })
@@ -111,10 +113,11 @@ export function Waveform({ source, s, dispatch, playCursor }: {
     const w = ws.current
     if (!w || !ready.current) return
     const { view, sr } = sRef.current
-    const spp = view.win / width
+    const w0 = widthRef.current
+    const spp = view.win / w0
     if (spp >= LEVEL) {
       wsBox.current!.style.opacity = '1'
-      const pxPerSec = width / (view.win / sr)
+      const pxPerSec = w0 / (view.win / sr)
       w.zoom(pxPerSec)
       w.setScrollTime(view.start / sr)
     } else {
@@ -126,7 +129,7 @@ export function Waveform({ source, s, dispatch, playCursor }: {
     const w = ws.current
     if (!w || !ready.current) return
     const { view, sr } = sRef.current
-    if (view.win / width >= LEVEL) w.setScrollTime(view.start / sr)
+    if (view.win / widthRef.current >= LEVEL) w.setScrollTime(view.start / sr)
   }
   useEffect(syncView, [s.view.win, s.view.start, width]) // eslint-disable-line react-hooks/exhaustive-deps
 

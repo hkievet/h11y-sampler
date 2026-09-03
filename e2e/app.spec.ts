@@ -173,6 +173,7 @@ test.describe('persistence', () => {
     await keys(page, 'KeyI', 'KeyS')
     await nameRegion(page, 'two')
     await expect(page.locator('.status')).toContainText('regions 2')
+    await keys(page, 'Shift+KeyJ') // zoomed in: the restored view must not be laid out with a placeholder width
     await page.waitForTimeout(400) // autosave debounce
     await page.reload()
     await page.locator('input[type=file]').setInputFiles({ name: fx.name, mimeType: 'audio/wav', buffer: Buffer.from(fx.bytes) })
@@ -195,8 +196,9 @@ async function expectPluginRegionsAligned(page: Page) {
   const overlay = await page.locator('.wave-overlay').boundingBox()
   expect(overlay).not.toBeNull()
   const fills = page.locator('.wave-ws [part~="region"]')
-  await expect(fills).toHaveCount(st.regions.length)
-  for (let i = 0; i < st.regions.length; i++) {
+  const n = await fills.count()
+  expect(n, 'the plugin virtualises off-screen regions; at least one must be in view').toBeGreaterThan(0)
+  for (let i = 0; i < n; i++) {
     const box = await fills.nth(i).boundingBox()
     expect(box).not.toBeNull()
     const id = Number((await fills.nth(i).getAttribute('part'))!.match(/r(\d+)/)![1])
