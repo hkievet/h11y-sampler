@@ -93,6 +93,7 @@ function Editor({ opened }: { opened: Opened }) {
   useEffect(() => { saveSettings(s.settings) }, [s.settings])
   const stateRef = useRef(s)
   stateRef.current = s
+  ;(window as unknown as { __h11y?: State }).__h11y = s // read by the end-to-end tests
   const folder = useRef<FileSystemDirectoryHandle | null>(null)
   const pendingFolder = useRef<Promise<FileSystemDirectoryHandle | null> | null>(null)
 
@@ -184,7 +185,9 @@ function Editor({ opened }: { opened: Opened }) {
           const dir = await pending
           if (!dir) {
             folder.current = null // a refused or stale folder is forgotten so the next press opens the picker
-            notify(hadFolder ? 'Chrome refused access to the saved folder. Press Cmd+Shift+E again to pick one.' : 'Folder picker cancelled. Cmd+E makes a zip instead.')
+            notify(hadFolder
+              ? 'Chrome refused access to the saved folder. Press Cmd+Shift+E again to pick one.'
+              : 'No folder chosen. Chrome will not write into Downloads, Desktop, Documents, or your home folder directly: create a subfolder such as Downloads/chops and pick that. Cmd+E makes a zip instead.')
             return
           }
           folder.current = dir

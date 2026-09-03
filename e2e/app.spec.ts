@@ -179,8 +179,34 @@ test.describe('persistence', () => {
     await expect(page.locator('.status')).toContainText('regions 2')
     await expect(page.locator('.toast')).toContainText('Restored 2 regions')
     await expect(page.locator('table')).toContainText('one.wav')
+    await expectPluginRegionsAligned(page)
+    await keys(page, 'Shift+Slash') // toggle the tutorial: the container resizes and wavesurfer redraws
+    await page.waitForTimeout(400)
+    await expectPluginRegionsAligned(page)
   })
 })
+
+/** wavesurfer's region fills must sit where the overlay puts the same regions */
+async function expectPluginRegionsAligned(page: Page) {
+  const st = await page.evaluate(() => {
+    const s = (window as unknown as { __h11y: { view: { win: number; start: number }; regions: { id: number; start: number; end: number }[] } }).__h11y
+    return { view: s.view, regions: s.regions }
+  })
+  const overlay = await page.locator('.wave-overlay').boundingBox()
+  expect(overlay).not.toBeNull()
+  const fills = page.locator('.wave-ws [part~="region"]')
+  await expect(fills).toHaveCount(st.regions.length)
+  for (let i = 0; i < st.regions.length; i++) {
+    const box = await fills.nth(i).boundingBox()
+    expect(box).not.toBeNull()
+    const id = Number((await fills.nth(i).getAttribute('part'))!.match(/r(\d+)/)![1])
+    const r = st.regions.find((x) => x.id === id)!
+    const expectedLeft = overlay!.x + ((r.start - st.view.start) / st.view.win) * overlay!.width
+    const expectedRight = overlay!.x + ((r.end - st.view.start) / st.view.win) * overlay!.width
+    expect(Math.abs(box!.x - expectedLeft), `region ${id} left`).toBeLessThan(3)
+    expect(Math.abs(box!.x + box!.width - expectedRight), `region ${id} right`).toBeLessThan(3)
+  }
+}
 
 test.describe('tutorial', () => {
   test('the demo recording opens with the tutorial and "Do it for me" drives the same keys', async ({ page }) => {

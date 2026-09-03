@@ -71,7 +71,7 @@ export async function writeToFolder(dir: FileSystemDirectoryHandle, source: Sour
  */
 export function pickFolder(): Promise<FileSystemDirectoryHandle | null> {
   if (!('showDirectoryPicker' in window)) return Promise.reject(new Error('This browser has no folder picker; use Cmd+E for a zip.'))
-  return window.showDirectoryPicker({ id: 'h11y-chops', mode: 'readwrite' }).catch((e: unknown) => {
+  return window.showDirectoryPicker({ id: 'h11y-chops', mode: 'readwrite', startIn: 'downloads' }).catch((e: unknown) => {
     if (e instanceof DOMException && e.name === 'AbortError') return null
     throw e
   })

@@ -80,6 +80,9 @@ export function Waveform({ source, s, dispatch, playCursor }: {
       ready.current = true
       syncView()
       syncRegions()
+      // wavesurfer re-renders on its own when the container resizes (layout settling after a
+      // reload, the tutorial panel toggling) and resets its scroll; put it back every time.
+      w.on('redrawcomplete', () => syncScroll())
     })()
     return () => {
       cancelled = true
@@ -118,6 +121,12 @@ export function Waveform({ source, s, dispatch, playCursor }: {
       // finer than the level: the overlay draws raw samples, wavesurfer would only stretch
       wsBox.current!.style.opacity = '0'
     }
+  }
+  function syncScroll() {
+    const w = ws.current
+    if (!w || !ready.current) return
+    const { view, sr } = sRef.current
+    if (view.win / width >= LEVEL) w.setScrollTime(view.start / sr)
   }
   useEffect(syncView, [s.view.win, s.view.start, width]) // eslint-disable-line react-hooks/exhaustive-deps
 
