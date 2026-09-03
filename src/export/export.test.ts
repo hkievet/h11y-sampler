@@ -54,7 +54,9 @@ describe('export', () => {
     expect(json).toEqual(regionsJson(source, files))
     expect(json.source).toMatchObject({ name: 'field', sampleRate: 48000, frames: 4800, fingerprint: { name: 'field.wav' } })
     expect(json.regions[1]).toEqual({ file: 'field-01.wav', name: null, start: 1000, end: 1500 })
-    expect(zip.file('kick.wav')!.options.compression).toBe('STORE')
+    // STORE: the archive is at least as large as its uncompressed entries (JSZip does not report compression on load)
+    const entryBytes = (await Promise.all(files.map(async (f) => (await chop(source, f)).size))).reduce((a, b) => a + b, 0)
+    expect(blob.size).toBeGreaterThanOrEqual(entryBytes)
   })
 
   it('a single Chop is exactly what Source.slice returns', async () => {
