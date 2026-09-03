@@ -1,7 +1,7 @@
 # Waveform view: wavesurfer plus overlay
 
 Type: task
-Status: open
+Status: claimed
 Blocked by:
 
 ## Question

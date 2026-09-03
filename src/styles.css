@@ -79,3 +79,11 @@ kbd {
 .drop.over { border-color: var(--accent); color: var(--accent); }
 .drop .big { font-size: 18px; color: var(--ink); margin-bottom: 6px; }
 .drop .error { margin-top: 10px; color: var(--red); }
+.wave {
+  position: relative; height: 240px; margin: 12px 20px 0;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+}
+.wave-ws { position: absolute; inset: 0; transition: opacity .1s; }
+.wave-ws ::part(region) { pointer-events: none; }
+.wave-overlay { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
+.wave.shake { animation: shake .3s; }

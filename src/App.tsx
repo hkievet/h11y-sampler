@@ -4,6 +4,7 @@ import {
   type State, type Action,
 } from './core/chopper'
 import { DropZone } from './DropZone'
+import { Waveform } from './view/Waveform'
 import type { Source } from './source'
 
 // Shell. Until the waveform, Transport, and export land, this drives the
@@ -80,6 +81,7 @@ function Editor({ source }: { source: Source }) {
 
   return (
     <>
+      <Waveform source={source} s={s} dispatch={dispatch} playCursor={() => null} />
       <StatusBar s={s} />
       <Toast s={s} />
       <StatePanel s={s} />
