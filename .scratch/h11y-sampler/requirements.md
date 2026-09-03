@@ -22,8 +22,13 @@ this. Vocabulary is in `/CONTEXT.md`.
 - Default Chop name is `<source-basename>-<index>`, zero-based, in
   start-time order, zero-padded to the count width at export. A typed name
   replaces the whole default. The name IS the filename, sanitized per the
-  filename rules decision; collisions get ` (2)` and a badge, and the
-  sanitized name previews live in the save prompt when it differs.
+  filename rules decision. The name prompt refuses a typed name whose
+  sanitized filename matches another Region's (case-insensitive): the
+  screen shakes, the error shows inline, and the prompt stays open until
+  the name changes (changed 2026-09-03, replacing the silent ` (2)`
+  suffix for typed names). The suffix remains only as an export safety
+  net for an automatic name that lands on a typed one. The sanitized name
+  previews live in the prompt when it differs.
 - The app ships a tutorial page modelled on the prototype's walkthrough
   tabs, each step with a "do it for me" button that replays the keys.
 

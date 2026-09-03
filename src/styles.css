@@ -107,3 +107,5 @@ button.do:disabled { opacity: .5; cursor: default; }
 .drop .demo { margin-top: 14px; color: var(--dim); }
 .drop .demo b { color: var(--accent); }
 .build { color: var(--line); font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
+.prompt .box.invalid input { border-color: var(--red); }
+.prompt .error { margin-top: 8px; font-size: 12px; color: var(--red); min-height: 16px; }

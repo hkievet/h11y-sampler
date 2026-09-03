@@ -35,6 +35,8 @@ export interface Prompt {
   forDraft: boolean
   regionId: number | null
   exportAfter: boolean
+  /** set when the last commit was refused; cleared on the next keystroke */
+  error?: string
 }
 
 export type Play =
@@ -483,12 +485,19 @@ export function reduce(prev: State, a: Action): State {
     }
 
     case 'promptInput':
-      return s.prompt ? { ...s, prompt: { ...s.prompt, value: a.value } } : prev
+      return s.prompt ? { ...s, prompt: { ...s.prompt, value: a.value, error: undefined } } : prev
     case 'promptCommit': {
       const p = s.prompt
       if (!p) return prev
       const typed = p.value.trim()
       const name = typed === '' || typed === p.def ? null : typed
+      // A typed name must not collide with another region's filename: refuse, shake, and keep the prompt open.
+      if (name != null) {
+        const clash = nameClash(s, name, p.forDraft ? (s.draft?.editingId ?? null) : p.regionId)
+        if (clash) {
+          return toast({ ...s, shake: s.shake + 1, prompt: { ...p, error: `"${clash}" is already used by another region. Pick a different name.` } }, 'That name is already used by another region.')
+        }
+      }
       if (p.forDraft) {
         const dr = s.draft
         if (!dr) return prev
@@ -627,6 +636,20 @@ export function reduce(prev: State, a: Action): State {
       }
     }
   }
+}
+
+/** The other region's display name whose export filename equals `name`'s, case-insensitively, or null. */
+export function nameClash(s: State, name: string, exceptId: number | null): string | null {
+  const mine = sanitize(name).toLowerCase()
+  if (!mine) return null
+  const all = ordered(s)
+  for (let i = 0; i < all.length; i++) {
+    const r = all[i]!
+    if (r.id === exceptId) continue
+    const theirs = (r.name != null ? sanitize(r.name) : `${s.basename}-${pad(i, all.length)}`).toLowerCase()
+    if (theirs === mine) return displayName(s, r)
+  }
+  return null
 }
 
 /** Move the active anchor to `frame`, clamped to the file and never crossing the other anchor. */

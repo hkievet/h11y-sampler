@@ -81,7 +81,7 @@ Producer means the person using the tool.
 47. As a producer, I want Cmd+Shift+E to write the same Chops into a folder I picked once, so that a sample library fills up without unzipping.
 48. As a producer, I want a WAV Source to export byte-exact, keeping 24-bit or float, so that the Chops are as good as the recording.
 49. As a producer, I want a decoded Source to export as 16-bit WAV at its own sample rate, so that compressed inputs still produce usable samples.
-50. As a producer, I want colliding filenames to get a suffix and a warning badge rather than an overwrite or a refusal, so that export always works and I can see what happened.
+50. As a producer, I want the name prompt to refuse a name that collides with another region's filename, with a shake and an inline error, so that I fix it on the spot and the zip never silently renames my chops.
 51. As a producer, I want a `regions.json` in every zip, so that a session is reproducible and shareable.
 52. As a producer, I want a reload to offer "Press Enter to reopen" and bring back the Source, Regions, selection, Playhead, and zoom, so that an accidental refresh costs one keypress.
 53. As a producer, I want my Regions restored when I re-drop the same file even without that offer, so that persistence works across browsers and moved files.
@@ -279,8 +279,10 @@ default keeps the name automatic; typing anything else fixes it. At
 export: NFC, keep Unicode, `/ \ : * ? " < > |` and control characters to
 `_`, collapse whitespace, trim spaces and dots, guard Windows reserved
 names, cap 120 characters, append `.wav` unless present, empty falls back
-to the automatic name. Collisions compared case-insensitively in start
-order get ` (2)`, ` (3)` and a badge. One sanitizer feeds the zip, the
+to the automatic name. The name prompt refuses a typed name whose
+sanitized filename matches another Region's, case-insensitively, with a
+shake and an inline error; the ` (2)` suffix remains only as an export
+safety net when an automatic name lands on a typed one. One sanitizer feeds the zip, the
 folder write, and the single download.
 
 ## Testing Decisions

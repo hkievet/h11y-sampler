@@ -311,6 +311,13 @@ function Prompt({ s, dispatch }: { s: State; dispatch: (a: Action) => void }) {
     ref.current?.focus()
     ref.current?.select()
   }, [])
+  const [shaking, setShaking] = useState(false)
+  useEffect(() => {
+    if (!p.error) return
+    setShaking(true)
+    const t = setTimeout(() => setShaking(false), 300)
+    return () => clearTimeout(t)
+  }, [p.error, s.shake])
   const typed = p.value.trim()
   const clean = sanitize(typed)
   const preview =
@@ -320,7 +327,7 @@ function Prompt({ s, dispatch }: { s: State; dispatch: (a: Action) => void }) {
     : ''
   return (
     <div className="prompt">
-      <div className="box">
+      <div className={'box' + (shaking ? ' shake' : '') + (p.error ? ' invalid' : '')}>
         <label>{p.forDraft ? (p.exportAfter ? 'Name this region, then it saves and exports' : 'Name this region (the name is the filename)') : 'Rename region'}</label>
         <input
           ref={ref}
@@ -334,7 +341,7 @@ function Prompt({ s, dispatch }: { s: State; dispatch: (a: Action) => void }) {
             e.stopPropagation()
           }}
         />
-        <div className="preview">{preview}</div>
+        {p.error ? <div className="error">{p.error}</div> : <div className="preview">{preview}</div>}
         <div className="hint">Enter saves · Esc discards the region · Enter on the untouched default keeps the name automatic</div>
       </div>
     </div>

@@ -59,6 +59,23 @@ spec with nothing left to decide, was reached: see the decisions below.)
 - [Seam A end-to-end tests and deploy](./issues/18-end-to-end-and-deploy.md): seven Playwright tests in real Chromium, green; the first browser run found and fixed the overlay stacking bug; CI runs both seams and deploys `dist/` to GitHub Pages on `main`; README written.
 - [Push to GitHub and enable Pages](./issues/19-push-and-enable-pages.md): public repository created, Pages on the Actions source, first CI run green, live at https://hkievet.github.io/h11y-sampler/.
 
+## After the map
+
+Small changes made on the live app after the destination was reached,
+each shipped directly without a ticket:
+
+- `c` clears the selection in Region Select mode (`a` selects all).
+- `Enter` saves in Insert Region mode like `s`; `Shift+Enter` like `S`.
+- The name prompt refuses a colliding name with a shake and an inline
+  error instead of suffixing ` (2)` at export; the suffix stays as a
+  safety net for automatic names only. Reverses part of
+  [Filename sanitization and collision rules](./issues/07-filename-rules.md).
+- wavesurfer gets no media and is zoomed with the live width; the region
+  fills line up with the overlay after reloads.
+- Cmd and Ctrl chords other than the app's own pass to the browser.
+- Folder export opens the picker and the permission prompt inside the key
+  gesture; Chrome refuses Downloads, Desktop, Documents, and home directly.
+
 ## Not yet specified
 
 Nothing. The destination is reached: the app is built, tested end to end

@@ -414,15 +414,40 @@ describe('sanitize', () => {
 })
 
 describe('filenames', () => {
-  it('resolves case-insensitive collisions in start order, defaults included, and flags them', () => {
+  it('the prompt refuses a typed name that collides with another region, case-insensitively, and shakes', () => {
     const d = new Driver()
     d.keys('KeyI', 'KeyS'); d.name('Kick')
-    d.keys('KeyI', 'KeyS'); d.name('kick')
-    d.keys('KeyI', 'KeyS'); d.name('rec-03') // a typed name that equals the NEXT region's automatic name
+    d.keys('KeyI', 'KeyS')
+    d.do({ type: 'promptInput', value: 'kick' })
+    d.do({ type: 'promptCommit' })
+    expect(d.s.prompt).not.toBeNull() // still open
+    expect(d.s.prompt!.error).toContain('Kick')
+    expect(d.s.shake).toBe(1)
+    expect(d.s.regions).toHaveLength(1)
+    d.do({ type: 'promptInput', value: 'kick 2' })
+    expect(d.s.prompt!.error).toBeUndefined()
+    d.do({ type: 'promptCommit' })
+    expect(d.s.regions).toHaveLength(2)
+    // sanitised forms are compared: "808/kick" and "808_kick" are the same file
+    d.keys('Tab', 'KeyR'); d.name('808_kick')
+    d.keys('KeyL', 'KeyR')
+    d.do({ type: 'promptInput', value: '808/kick' })
+    d.do({ type: 'promptCommit' })
+    expect(d.s.prompt!.error).toBeDefined()
+    d.do({ type: 'promptCancel' })
+    // renaming a region to its own current name is not a clash
+    d.keys('KeyH', 'KeyR')
+    d.do({ type: 'promptCommit' })
+    expect(d.s.prompt).toBeNull()
+  })
+
+  it('the export safety net still suffixes a typed name that equals an automatic one', () => {
+    const d = new Driver()
+    d.keys('KeyI', 'KeyS'); d.name('rec-01') // equals what the next region will be called automatically
     d.keys('KeyI', 'KeyS'); d.name(null)
     const out = filenames(d.s, d.s.regions)
-    expect(out.map((f) => f.file)).toEqual(['Kick.wav', 'kick (2).wav', 'rec-03.wav', 'rec-03 (2).wav'])
-    expect(out.map((f) => f.collided)).toEqual([false, true, false, true])
+    expect(out.map((f) => f.file)).toEqual(['rec-01.wav', 'rec-01 (2).wav'])
+    expect(out.map((f) => f.collided)).toEqual([false, true])
   })
 
   it('pads automatic indices to the count width', () => {
