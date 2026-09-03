@@ -63,14 +63,18 @@ export async function writeToFolder(dir: FileSystemDirectoryHandle, source: Sour
   return written
 }
 
-/** Ask once for a folder with write access. The Persistence ticket remembers the handle. */
-export async function pickFolder(): Promise<FileSystemDirectoryHandle | null> {
-  if (!('showDirectoryPicker' in window)) return null
-  try {
-    return await window.showDirectoryPicker({ id: 'h11y-chops', mode: 'readwrite' })
-  } catch {
-    return null // the user cancelled
-  }
+/**
+ * Ask for a folder with write access. Must be called synchronously inside a
+ * user-gesture handler (a keydown): Chrome refuses the picker with
+ * NotAllowedError once the gesture has passed. Resolves null when the user
+ * cancels; any other failure is rethrown so the Shell can say why.
+ */
+export function pickFolder(): Promise<FileSystemDirectoryHandle | null> {
+  if (!('showDirectoryPicker' in window)) return Promise.reject(new Error('This browser has no folder picker; use Cmd+E for a zip.'))
+  return window.showDirectoryPicker({ id: 'h11y-chops', mode: 'readwrite' }).catch((e: unknown) => {
+    if (e instanceof DOMException && e.name === 'AbortError') return null
+    throw e
+  })
 }
 
 /** Ensure a remembered handle is still writable, prompting if needed. */

@@ -220,10 +220,12 @@ export function Waveform({ source, s, dispatch, playCursor }: {
         cx.beginPath(); cx.moveTo(0, mid); cx.lineTo(W, mid); cx.stroke()
       }
 
-      // regions: highlight and labels (the plugin draws the base fill)
+      // regions: highlight and labels (the plugin draws the base fill).
+      // Labels sit on the top row; a label only drops a row when it would overlap one already drawn.
       const list = ordered(st)
       cx.font = '11px ui-monospace, Menlo, monospace'
-      list.forEach((r, i) => {
+      const rows: { x0: number; x1: number }[][] = []
+      list.forEach((r) => {
         const x0 = xOf(r.start)
         const x1 = xOf(r.end)
         if (x1 < 0 || x0 > W) return
@@ -237,7 +239,13 @@ export function Waveform({ source, s, dispatch, playCursor }: {
         cx.lineWidth = act ? 2 : 1
         cx.strokeRect(x0 + 0.5, 0.5, Math.max(1, x1 - x0) - 1, H - 1)
         cx.fillStyle = act ? COLOURS.activeLine : COLOURS.regionText
-        cx.fillText((sel ? '[x] ' : '') + displayName(st, r) + (r.name == null ? ' (auto)' : ''), x0 + 4, 12 + (i % 3) * 12)
+        const label = (sel ? '[x] ' : '') + displayName(st, r) + (r.name == null ? ' (auto)' : '')
+        const lx0 = x0 + 4
+        const lx1 = lx0 + cx.measureText(label).width + 6
+        let row = 0
+        while (rows[row]?.some((o) => lx0 < o.x1 && lx1 > o.x0)) row++
+        ;(rows[row] ??= []).push({ x0: lx0, x1: lx1 })
+        cx.fillText(label, lx0, 12 + row * 12)
       })
 
       // ruler

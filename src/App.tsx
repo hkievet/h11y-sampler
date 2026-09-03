@@ -92,6 +92,8 @@ function Editor({ opened }: { opened: Opened }) {
   useEffect(() => { saveSettings(s.settings) }, [s.settings])
   const stateRef = useRef(s)
   stateRef.current = s
+  const folder = useRef<FileSystemDirectoryHandle | null>(null)
+  const pendingFolder = useRef<Promise<FileSystemDirectoryHandle | null> | null>(null)
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -102,6 +104,10 @@ function Editor({ opened }: { opened: Opened }) {
       const a = keyToAction(stateRef.current, toKeyEvent('down', e))
       if (!a) return
       e.preventDefault()
+      // The folder picker must open inside the gesture, before React gets to the export effect.
+      if (a.type === 'exportBatch' && a.to === 'folder' && !folder.current && !pendingFolder.current && stateRef.current.regions.length) {
+        pendingFolder.current = pickFolder()
+      }
       dispatch(a)
     }
     const up = (e: KeyboardEvent) => {
@@ -152,7 +158,6 @@ function Editor({ opened }: { opened: Opened }) {
     transport.current?.prepare({ start: a!, end: b! })
   }, [activeRange])
   // ---- Export: driven by the Core's export intents ----
-  const folder = useRef<FileSystemDirectoryHandle | null>(null)
   useEffect(() => { void loadFolder().then((h) => { folder.current = h }) }, [])
   useEffect(() => {
     const req = s.exportReq
@@ -169,16 +174,19 @@ function Editor({ opened }: { opened: Opened }) {
           notify(`Exported ${req.files.length} chop${req.files.length === 1 ? '' : 's'} to ${req.zip}`)
         } else {
           if (!folder.current) {
-            folder.current = await pickFolder()
+            const pending = pendingFolder.current ?? pickFolder()
+            pendingFolder.current = null
+            folder.current = await pending
             if (folder.current) void saveFolder(folder.current)
           }
-          if (!folder.current) { notify('No folder chosen.'); return }
+          if (!folder.current) { notify('Folder picker cancelled. Cmd+E makes a zip instead.'); return }
           if (!(await ensureWritable(folder.current))) { notify('No permission to write to that folder.'); return }
           const names = await writeToFolder(folder.current, source, req.files)
           notify(`Wrote ${names.length - 1} chop${names.length === 2 ? '' : 's'} to ${folder.current.name}/`)
         }
       } catch (e) {
-        notify(`Export failed: ${e instanceof Error ? e.message : String(e)}`)
+        pendingFolder.current = null
+        notify(`Export failed: ${e instanceof DOMException ? `${e.name}: ${e.message}` : e instanceof Error ? e.message : String(e)}`)
       }
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
