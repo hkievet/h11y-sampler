@@ -72,12 +72,18 @@ export function createTransport(source: Source, opts: TransportOptions = {}): Tr
   const key = (r: FrameRange) => `${r.start}:${r.end}`
 
   let state: TransportState = { kind: 'idle' }
+  let building = false // a preview buffer is being built
+  let releasedEarly = false // keyup arrived while it was building
   const listeners = new Set<() => void>()
   const ended = () => listeners.forEach((fn) => fn())
 
   function context(): AudioContext {
-    if (!ctx) ctx = new AudioContext({ sampleRate: sr })
+    if (!ctx) ctx = new AudioContext({ sampleRate: sr }) // may start suspended; resumes on first use after a key press
     if (ctx.state !== 'running') void ctx.resume()
+    return ctx
+  }
+  function contextForBuild(): AudioContext {
+    if (!ctx) ctx = new AudioContext({ sampleRate: sr })
     return ctx
   }
 
@@ -87,7 +93,7 @@ export function createTransport(source: Source, opts: TransportOptions = {}): Tr
     if (!p) {
       p = (async () => {
         const chans = await source.window(range)
-        const c = context()
+        const c = contextForBuild()
         const buf = c.createBuffer(chans.length, chans[0]!.length, sr)
         chans.forEach((data, ch) => {
           const f = new Float32Array(data.length)
@@ -185,17 +191,22 @@ export function createTransport(source: Source, opts: TransportOptions = {}): Tr
       })
     },
     async previewStart(range) {
-      if (state.kind === 'preview') return // repeat keydown
+      if (state.kind === 'preview' || building) return // repeat keydown
       if (range.end - range.start > capFrames) return
       stopMedia()
       const mySeq = seq + 1
-      const buf = await buildBuffer(range)
+      building = true
+      releasedEarly = false
+      let buf: AudioBuffer
+      try { buf = await buildBuffer(range) } finally { building = false }
       if (seq + 1 !== mySeq) return // something else started meanwhile
       const passLen = buf.duration
       const t0 = startNode(buf, true, null)
       state = { kind: 'preview', range, t0, passLen, releasing: false }
+      if (releasedEarly) t.previewRelease() // the tap ended before the buffer was ready: play one pass
     },
     previewRelease() {
+      if (building) { releasedEarly = true; return }
       if (state.kind !== 'preview' || !node || !ctx) return
       const elapsed = ctx.currentTime - state.t0
       if (elapsed < state.passLen) {
@@ -218,7 +229,7 @@ export function createTransport(source: Source, opts: TransportOptions = {}): Tr
       state = { kind, range, t0 }
     },
     prepare(range) {
-      if (range.end > range.start && range.end - range.start <= capFrames && ctx) void buildBuffer(range)
+      if (range.end > range.start && range.end - range.start <= capFrames) void buildBuffer(range)
     },
     cancel() {
       seq++
