@@ -72,7 +72,10 @@ export function Waveform({ source, s, dispatch, playCursor }: {
       const buckets = Math.min(Math.ceil(source.info.frames / LEVEL), 4_000_000)
       const peaks = await source.peaks(buckets)
       if (cancelled) return
-      await w.loadBlob(source.media(), peaks, source.info.duration)
+      // No media for wavesurfer: with a source set, getDuration() prefers the audio element's
+      // metadata, which can differ from frames / sampleRate and arrives late, shifting every
+      // region and scroll position. Peaks plus the exact duration is all it needs to draw.
+      await w.load('', peaks, source.info.duration)
       if (cancelled) return
       ready.current = true
       syncView()
