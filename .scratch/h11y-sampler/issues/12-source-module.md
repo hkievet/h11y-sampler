@@ -1,7 +1,7 @@
 # Source module: WAV fast path, decoded path, peaks
 
 Type: task
-Status: open
+Status: claimed
 Blocked by: 
 
 ## Question

@@ -3,11 +3,11 @@ import {
   initial, keyToAction, reduce, ordered, displayName, filenames, stepFrames, sanitize,
   type State, type Action,
 } from './core/chopper'
+import { DropZone } from './DropZone'
+import type { Source } from './source'
 
-// Placeholder Shell: proves the Core port by driving it with the real keys.
-// A 30-second silent stand-in Source until the Source module lands.
-const SR = 48000
-const FRAMES = 30 * SR
+// Shell. Until the waveform, Transport, and export land, this drives the
+// Core with the real keys and shows the state; the Source is real.
 
 function fmt(frames: number, sr: number) {
   return (frames / sr).toFixed(3) + 's'
@@ -22,7 +22,32 @@ function toKeyEvent(type: 'down' | 'up', e: KeyboardEvent) {
 }
 
 export function App() {
-  const [s, dispatch] = useReducer((st: State, a: Action) => reduce(st, a), undefined, () => initial(FRAMES, 'rec', SR))
+  const [source, setSource] = useState<Source | null>(null)
+  const [warning, setWarning] = useState<string | null>(null)
+  return (
+    <>
+      <header>
+        <h1>h11y-sampler</h1>
+        <p className="note">
+          {source
+            ? <>{source.info.name} · {source.info.duration.toFixed(1)} s · {source.info.sampleRate} Hz · {source.info.channels} ch · {source.info.origin === 'wav' ? `${source.info.format.bits}-bit ${source.info.format.kind} passthrough` : 'decoded, 16-bit export'}{source.info.truncated ? ' · truncated' : ''}</>
+            : <>Keyboard-first sample chopper. Drop a recording to begin.</>}
+        </p>
+      </header>
+      {warning && <div className="toast">{warning}</div>}
+      {source
+        ? <Editor key={`${source.info.name}:${source.info.frames}`} source={source} />
+        : <DropZone onSource={(s, w) => { setSource(s); setWarning(w) }} />}
+    </>
+  )
+}
+
+function Editor({ source }: { source: Source }) {
+  const [s, dispatch] = useReducer(
+    (st: State, a: Action) => reduce(st, a),
+    undefined,
+    () => initial(source.info.frames, source.info.name, source.info.sampleRate),
+  )
   const stateRef = useRef(s)
   stateRef.current = s
 
@@ -51,15 +76,10 @@ export function App() {
     }
   }, [])
 
+  useEffect(() => () => source.dispose(), [source])
+
   return (
     <>
-      <header>
-        <h1>h11y-sampler</h1>
-        <p className="note">
-          Scaffold: the Core state machine driven by the real keys on a silent 30-second stand-in Source. No waveform, audio, or export yet.
-          Press <kbd>i</kbd> to start.
-        </p>
-      </header>
       <StatusBar s={s} />
       <Toast s={s} />
       <StatePanel s={s} />
