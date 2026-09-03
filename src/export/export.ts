@@ -77,10 +77,12 @@ export function pickFolder(): Promise<FileSystemDirectoryHandle | null> {
   })
 }
 
-/** Ensure a remembered handle is still writable, prompting if needed. */
-export async function ensureWritable(dir: FileSystemDirectoryHandle): Promise<boolean> {
-  const q = (await dir.queryPermission?.({ mode: 'readwrite' })) ?? 'granted'
-  if (q === 'granted') return true
-  const r = (await dir.requestPermission?.({ mode: 'readwrite' })) ?? 'denied'
-  return r === 'granted'
+/**
+ * Ensure a remembered handle is still writable, prompting if needed. Like the
+ * picker, the prompt only works inside a user gesture; call it from the key
+ * handler. The query is skipped so the request starts synchronously.
+ */
+export function ensureWritable(dir: FileSystemDirectoryHandle): Promise<boolean> {
+  if (!dir.requestPermission) return Promise.resolve(true)
+  return dir.requestPermission({ mode: 'readwrite' }).then((r) => r === 'granted', () => false)
 }

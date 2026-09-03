@@ -104,9 +104,13 @@ function Editor({ opened }: { opened: Opened }) {
       const a = keyToAction(stateRef.current, toKeyEvent('down', e))
       if (!a) return
       e.preventDefault()
-      // The folder picker must open inside the gesture, before React gets to the export effect.
-      if (a.type === 'exportBatch' && a.to === 'folder' && !folder.current && !pendingFolder.current && stateRef.current.regions.length) {
-        pendingFolder.current = pickFolder()
+      // Folder export: the picker and the permission re-grant must start inside the gesture,
+      // before React gets to the export effect, or Chrome refuses them with NotAllowedError.
+      if (a.type === 'exportBatch' && a.to === 'folder' && !pendingFolder.current && stateRef.current.regions.length) {
+        const known = folder.current
+        pendingFolder.current = known
+          ? ensureWritable(known).then((ok) => (ok ? known : null), () => null)
+          : pickFolder()
       }
       dispatch(a)
     }
@@ -173,16 +177,19 @@ function Editor({ opened }: { opened: Opened }) {
           download(await buildZip(source, req.files), req.zip!)
           notify(`Exported ${req.files.length} chop${req.files.length === 1 ? '' : 's'} to ${req.zip}`)
         } else {
-          if (!folder.current) {
-            const pending = pendingFolder.current ?? pickFolder()
-            pendingFolder.current = null
-            folder.current = await pending
-            if (folder.current) void saveFolder(folder.current)
+          const hadFolder = !!folder.current
+          const pending = pendingFolder.current ?? (folder.current ? ensureWritable(folder.current).then((ok) => (ok ? folder.current : null)) : pickFolder())
+          pendingFolder.current = null
+          const dir = await pending
+          if (!dir) {
+            folder.current = null // a refused or stale folder is forgotten so the next press opens the picker
+            notify(hadFolder ? 'Chrome refused access to the saved folder. Press Cmd+Shift+E again to pick one.' : 'Folder picker cancelled. Cmd+E makes a zip instead.')
+            return
           }
-          if (!folder.current) { notify('Folder picker cancelled. Cmd+E makes a zip instead.'); return }
-          if (!(await ensureWritable(folder.current))) { notify('No permission to write to that folder.'); return }
-          const names = await writeToFolder(folder.current, source, req.files)
-          notify(`Wrote ${names.length - 1} chop${names.length === 2 ? '' : 's'} to ${folder.current.name}/`)
+          folder.current = dir
+          void saveFolder(dir)
+          const names = await writeToFolder(dir, source, req.files)
+          notify(`Wrote ${names.length - 1} chop${names.length === 2 ? '' : 's'} and regions.json to ${dir.name}/`)
         }
       } catch (e) {
         pendingFolder.current = null
@@ -243,7 +250,7 @@ function Toast({ s }: { s: State }) {
   useEffect(() => {
     if (!s.toast) return
     setVisible(true)
-    const t = setTimeout(() => setVisible(false), 2200)
+    const t = setTimeout(() => setVisible(false), s.toast.text.length > 40 ? 6000 : 2200)
     return () => clearTimeout(t)
   }, [s.toast])
   if (!visible || !s.toast) return null
