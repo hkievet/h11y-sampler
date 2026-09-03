@@ -53,6 +53,7 @@ spec with nothing left to decide, was reached: see the decisions below.)
 - [Source module: WAV fast path, decoded path, peaks](./issues/12-source-module.md): `openSource` sniffs bytes; WAV Chops are a verbatim-`fmt ` header plus a `File.slice`; decoded Sources sniff the container rate, decode once, and hold Int16; a 64-frame peaks level serves every zoom; 20 tests on generated fixtures; the drop zone is live.
 - [Waveform view: wavesurfer plus overlay](./issues/13-waveform-view.md): wavesurfer fed the peaks level once and driven from the Core's view; Regions plugin mirrors saved Regions with pointer-events off; a canvas overlay draws draft, Anchors, highlight, labels, Playhead, ruler, and play cursor, handles drag, and draws raw samples below 64 frames per pixel.
 - [Transport: media element and Web Audio previews](./issues/14-transport.md): an `<audio>` on the original file for Playhead play with restart-on-scrub; per-range Web Audio buffers at the Source rate for looping previews with the finish-the-pass and 8 ms ramp release rules, auditions, and export playback; `position()` pulled by the overlay; the Shell maps play intents to it and feeds `playbackEnded` back.
+- [Export: single WAV, zip, folder write](./issues/15-export.md): one sanitizer, three sinks; JSZip `STORE` with `regions.json`; `Cmd+Shift+E` writes to a folder via the File System Access API; `notify` action for toasts; zip contents tested byte-exact in node.
 
 ## Not yet specified
 
