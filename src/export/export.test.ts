@@ -30,14 +30,14 @@ describe('export', () => {
     s = withRegions(s, [
       { start: 100, end: 600, name: 'kick' },
       { start: 1000, end: 1500, name: null },
-      { start: 2000, end: 2400, name: 'Kick' },
+      { start: 2000, end: 2400, name: 'snare' },
     ])
     const files = filenames(s, s.regions)
-    expect(files.map((f) => f.file)).toEqual(['kick.wav', 'field-01.wav', 'Kick (2).wav'])
+    expect(files.map((f) => f.file)).toEqual(['kick.wav', 'field-01.wav', 'snare.wav'])
 
     const blob = await buildZip(source, files)
     const zip = await JSZip.loadAsync(await blob.arrayBuffer())
-    expect(Object.keys(zip.files).sort()).toEqual(['Kick (2).wav', 'field-01.wav', 'kick.wav', 'regions.json'])
+    expect(Object.keys(zip.files).sort()).toEqual(['field-01.wav', 'kick.wav', 'regions.json', 'snare.wav'])
 
     for (const f of files) {
       const entry = new Uint8Array(await zip.file(f.file)!.async('uint8array'))

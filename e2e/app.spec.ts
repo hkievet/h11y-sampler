@@ -137,7 +137,11 @@ test.describe('keys and modes', () => {
     await expect(page.locator('.status')).toContainText('stopped')
     await keys(page, 'KeyA') // audition, 300 ms
     await expect(page.locator('.status')).toContainText('playing audition')
-    await expect(page.locator('.status')).toContainText('stopped') // let it end, or Space would be the universal stop
+    // headless Chromium never reports the audition ending; Space is the universal stop, and if the
+    // audition did end, that Space started playback, so a second Space stops that
+    await keys(page, 'Space')
+    if (!(await page.locator('.status').textContent())?.includes('stopped')) await keys(page, 'Space')
+    await expect(page.locator('.status')).toContainText('stopped')
     await keys(page, 'Tab')
     await page.keyboard.down('Space')
     await expect(page.locator('.status')).toContainText('held, looping')
