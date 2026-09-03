@@ -53,7 +53,7 @@ regions (or all). `Cmd+Shift+E` writes the same chops into a folder. `u`,
 | `e` / `r` / `x` | edit bounds / rename / delete |
 | `E` | export this region to Downloads |
 | `Space` | tap plays once, hold loops |
-| `Shift+Space`, `A`, `Shift+A` | toggle selection, select all, clear |
+| `Shift+Space`, `a`, `c` | toggle selection, select all, clear |
 | `p` / `P` | Playhead mode at the region start / end |
 | `Esc` / `Tab` | back to Playhead mode |
 

@@ -252,11 +252,13 @@ describe('overlap, cycle, select, batch export', () => {
     expect(d.s.exportReq!.files).toHaveLength(2)
   })
 
-  it('A selects all and Shift+A clears', () => {
+  it('a selects all; c (and Shift+A) clear', () => {
     const d = twoOverlapping()
     d.keys('Tab', 'KeyA')
     expect(d.s.selected).toHaveLength(2)
-    d.keys('Shift+KeyA')
+    d.keys('KeyC')
+    expect(d.s.selected).toEqual([])
+    d.keys('KeyA', 'Shift+KeyA')
     expect(d.s.selected).toEqual([])
   })
 

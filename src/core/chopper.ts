@@ -354,6 +354,7 @@ export function keyToAction(s: State, ev: KeyEvent): Action | null {
   if (code === 'KeyE') return shift ? { type: 'exportOne' } : { type: 'edit' }
   if (code === 'Space') return shift ? { type: 'toggleSelect' } : repeat ? null : { type: 'previewDown' }
   if (code === 'KeyA') return shift ? { type: 'clearSelect' } : { type: 'selectAll' }
+  if (code === 'KeyC') return { type: 'clearSelect' }
   if (code === 'KeyP') return { type: 'toPlayhead', at: shift ? 'end' : 'start' }
   if (code === 'KeyX') return { type: 'delete' }
   if (code === 'KeyR') return ctrl ? { type: 'redo' } : { type: 'rename' }

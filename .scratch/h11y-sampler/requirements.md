@@ -94,7 +94,7 @@ the end Anchor active; saving updates it in place as one undo step.
 | `E` | export the Active Region to Downloads |
 | `Space` | tap plays the Active Region once; hold loops it; release before a pass ends finishes the pass; a tap under 200 ms always plays one full pass |
 | `Shift+Space` | toggle the Active Region in Selected Regions |
-| `A` / `Shift+A` | select all / clear |
+| `a` / `c` | select all / clear the selection (`Shift+A` also clears) |
 | `p` / `P` | Playhead mode with the Playhead at the Region's start / end |
 | `x` | delete; the next Region in order becomes active; deleting the last returns to Playhead mode with a toast |
 | `r` | rename prompt only, existing name highlighted |

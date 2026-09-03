@@ -75,7 +75,7 @@ Producer means the person using the tool.
 41. As a producer, I want `u` and Ctrl+R, plus Cmd+Z and Cmd+Shift+Z, to undo and redo create, delete, bounds change, and rename as single steps, so that mistakes are cheap.
 42. As a producer, I want `p` and `P` to drop me into Playhead mode at the Region's start or end, so that I can continue from a Region I found.
 43. As a producer, I want `E` to export the Active Region to Downloads with no prompt, so that a single Chop is one key.
-44. As a producer, I want Shift+Space to toggle a Region in Selected Regions, `A` to select all, and Shift+A to clear, so that I control what the zip contains.
+44. As a producer, I want Shift+Space to toggle a Region in Selected Regions, `a` to select all, and `c` to clear, so that I control what the zip contains.
 45. As a producer, I want the selection to survive mode switches, so that I can mark one more Region and come back to export.
 46. As a producer, I want Cmd+E to zip Selected Regions, or all Regions when nothing is selected, and clear the selection, so that batch export is one chord.
 47. As a producer, I want Cmd+Shift+E to write the same Chops into a folder I picked once, so that a sample library fills up without unzipping.
@@ -265,7 +265,7 @@ Region Select mode (Playhead hidden and never moved)
 | `E` | export the Active Region to Downloads |
 | `Space` | tap plays once; hold loops; release before a pass ends finishes the pass |
 | `Shift+Space` | toggle in Selected Regions |
-| `A` / `Shift+A` | select all / clear |
+| `a` / `c` | select all / clear the selection |
 | `p` / `P` | Playhead mode with the Playhead at the Region's start / end |
 | `x` | delete; next in order becomes active; deleting the last returns to Playhead mode |
 | `r` | rename prompt only |

@@ -122,7 +122,7 @@ export const keymap: Record<string, [string, string][]> = {
     ['E', 'export this region to Downloads'],
     ['Space', 'tap: play once; hold: loop'],
     ['Shift+Space', 'toggle in the selection'],
-    ['A / Shift+A', 'select all / clear'],
+    ['a / c', 'select all / clear the selection'],
     ['p / P', 'Playhead mode at the region start / end'],
     ['x', 'delete'],
     ['r', 'rename'],
