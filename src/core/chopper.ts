@@ -335,7 +335,7 @@ export function keyToAction(s: State, ev: KeyEvent): Action | null {
 
   if (s.mode === 'playhead') {
     if (code === 'Space') return repeat ? null : { type: 'playToggle' }
-    if (code === 'KeyI') return { type: 'insert', first: shift ? 'end' : 'start' }
+    if (code === 'KeyI' || code === 'KeyV') return { type: 'insert', first: shift ? 'end' : 'start' } // v/V as in vim's visual select
     if (code === 'KeyA') return { type: 'auditionPlayhead', side: shift ? 'end' : 'start' }
     if (code === 'Tab') return { type: 'tab' }
     if (code === 'KeyU') return { type: 'undo' }

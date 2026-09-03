@@ -35,7 +35,7 @@ regions (or all). `Cmd+Shift+E` writes the same chops into a folder. `u`,
 | `j` / `k`, `J` / `K` | zoom 20%, zoom 80% (J floors at one second, K caps at the file) |
 | `Space` | play from the playhead; again stops and snaps back |
 | `a` / `A` | audition 300 ms ahead of / behind the playhead |
-| `i` / `I` | insert a region starting / ending here |
+| `i` / `I` (or `v` / `V`) | insert a region starting / ending here |
 | `Tab` | Region Select mode |
 
 | Insert Region mode | |

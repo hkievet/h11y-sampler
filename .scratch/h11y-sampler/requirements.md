@@ -67,8 +67,8 @@ current zoom, coarse = 10% of the window.
 | `Space` | play from the Playhead; again stops and snaps back to the Return point |
 | scrub while playing | playback restarts at the new position, which becomes the Return point |
 | `a` / `A` | audition 300 ms ahead of / behind the Playhead |
-| `i` | Insert Region: start Anchor at the Playhead, end Anchor 20% of the window later, end Anchor active |
-| `I` | Insert Region: end Anchor at the Playhead, start Anchor 20% earlier, start Anchor active |
+| `i` or `v` | Insert Region: start Anchor at the Playhead, end Anchor 20% of the window later, end Anchor active |
+| `I` or `V` | Insert Region: end Anchor at the Playhead, start Anchor 20% earlier, start Anchor active |
 | `Tab` | Region Select mode; with no Regions, shake the waveform and toast "No regions yet. Press i to add one." |
 | mouse drag | move the Playhead |
 
