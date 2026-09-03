@@ -81,6 +81,16 @@ describe('mark and name a chop', () => {
     expect(files(d.s)).toEqual(['rec-00.wav'])
   })
 
+  it('Enter in Insert Region mode is the same as s', () => {
+    const d = new Driver()
+    d.keys('KeyI', 'Enter')
+    expect(d.s.prompt).toMatchObject({ forDraft: true, exportAfter: false })
+    d.name('hat')
+    expect(d.s.regions).toHaveLength(1)
+    d.keys('KeyI', 'Shift+Enter')
+    expect(d.s.prompt).toMatchObject({ forDraft: true, exportAfter: true })
+  })
+
   it('I mirrors i: end at the playhead, start a gap earlier, start active', () => {
     const d = new Driver()
     d.keys('Opt+KeyL', 'Opt+KeyL', 'Opt+KeyL')

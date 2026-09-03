@@ -112,7 +112,7 @@ export const keymap: Record<string, [string, string][]> = {
     ['o', 'toggle which anchor is active'],
     ['a', 'audition the active anchor: start plays forward, end plays into it'],
     ['Space', 'preview the draft: tap once, hold loops'],
-    ['s', 'name prompt; Enter saves, back to Playhead mode at the region end'],
+    ['s or Enter', 'name prompt; Enter saves, back to Playhead mode at the region end'],
     ['S', 'name prompt; Enter saves, exports to Downloads, back to Playhead mode'],
     ['Esc', 'discard the draft, from the prompt too'],
   ],

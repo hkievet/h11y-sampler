@@ -44,7 +44,7 @@ regions (or all). `Cmd+Shift+E` writes the same chops into a folder. `u`,
 | `o` | toggle which anchor is active |
 | `a` | audition the active anchor |
 | `Space` | preview the draft: tap once, hold loops |
-| `s` / `S` | name and save / name, save, and export |
+| `s` or `Enter` / `S` | name and save / name, save, and export |
 | `Esc` | discard |
 
 | Region Select mode | |

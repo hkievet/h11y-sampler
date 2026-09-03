@@ -342,7 +342,7 @@ export function keyToAction(s: State, ev: KeyEvent): Action | null {
   }
   if (s.mode === 'insert') {
     if (code === 'KeyO') return { type: 'anchor' }
-    if (code === 'KeyS') return { type: 'save', exportAfter: shift }
+    if (code === 'KeyS' || code === 'Enter') return { type: 'save', exportAfter: shift } // S / Shift+Enter also export
     if (code === 'KeyA') return { type: 'audition' }
     if (code === 'Escape') return { type: 'cancel' }
     if (code === 'Space') return repeat ? null : { type: 'previewDown' }

@@ -77,7 +77,7 @@ current zoom, coarse = 10% of the window.
 | `o` | toggle which Anchor is active |
 | `a` | audition the active Anchor: a start Anchor plays 300 ms forward, an end Anchor plays the 300 ms into it and stops dead |
 | `Space` | preview the draft: tap plays once, hold loops |
-| `s` | name prompt with the default name highlighted; Enter saves and returns to Playhead mode with the Playhead at the Region's end |
+| `s` or `Enter` | name prompt with the default name highlighted; Enter saves and returns to Playhead mode with the Playhead at the Region's end |
 | `S` | same prompt; Enter saves, exports the Chop to Downloads, and returns to Playhead mode |
 | `Esc` | discard the draft, also from inside the prompt; Playhead unchanged |
 

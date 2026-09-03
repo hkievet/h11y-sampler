@@ -135,7 +135,9 @@ test.describe('keys and modes', () => {
     await keys(page, 'KeyL') // restart on scrub
     await keys(page, 'Space')
     await expect(page.locator('.status')).toContainText('stopped')
-    await keys(page, 'KeyA') // audition
+    await keys(page, 'KeyA') // audition, 300 ms
+    await expect(page.locator('.status')).toContainText('playing audition')
+    await expect(page.locator('.status')).toContainText('stopped') // let it end, or Space would be the universal stop
     await keys(page, 'Tab')
     await page.keyboard.down('Space')
     await expect(page.locator('.status')).toContainText('held, looping')
