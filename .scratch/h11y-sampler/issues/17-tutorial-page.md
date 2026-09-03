@@ -1,7 +1,7 @@
 # Tutorial page and keymap reference
 
 Type: task
-Status: open
+Status: claimed
 Blocked by:
 
 ## Question

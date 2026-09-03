@@ -4,6 +4,7 @@ import {
   type State, type Action,
 } from './core/chopper'
 import { DropZone, type Opened } from './DropZone'
+import { Tutorial } from './tutorial/Tutorial'
 import { fingerprintOf, keyOf, sameFile, loadSession, loadSessionByName, saveSession, loadFolder, saveFolder, loadSettings, saveSettings } from './persist/store'
 import { Waveform, type PlayCursor } from './view/Waveform'
 import { createTransport, type Transport } from './transport/transport'
@@ -58,6 +59,7 @@ function Editor({ opened }: { opened: Opened }) {
     },
   )
   const fp = fingerprintOf(opened.file)
+  const [tutorial, setTutorial] = useState(opened.file.name === 'demo.wav')
 
   // ---- Persistence: restore on mount, autosave after ----
   const restored = useRef(false)
@@ -96,6 +98,7 @@ function Editor({ opened }: { opened: Opened }) {
       const t = e.target as HTMLElement | null
       if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) return
       if (e.code === 'Space' || e.code === 'Tab') e.preventDefault() // never scroll the page or move focus
+      if (e.code === 'Slash' && e.shiftKey && !stateRef.current.prompt) { e.preventDefault(); setTutorial((t) => !t); return }
       const a = keyToAction(stateRef.current, toKeyEvent('down', e))
       if (!a) return
       e.preventDefault()
@@ -193,7 +196,10 @@ function Editor({ opened }: { opened: Opened }) {
       <Waveform source={source} s={s} dispatch={dispatch} playCursor={playCursor} />
       <StatusBar s={s} />
       <Toast s={s} />
-      <StatePanel s={s} />
+      <div className={'cols' + (tutorial ? ' with-tutorial' : '')}>
+        <StatePanel s={s} />
+        {tutorial && <Tutorial onClose={() => setTutorial(false)} />}
+      </div>
       {s.prompt && <Prompt s={s} dispatch={dispatch} />}
     </>
   )
@@ -219,6 +225,7 @@ function StatusBar({ s }: { s: State }) {
       <span>zoom <b>{(s.view.win / s.sr).toFixed(3)}s</b> across</span>
       <span>regions <b>{s.regions.length}</b> · selected <b>{s.selected.length}</b></span>
       <span>{s.play ? <b>playing {s.play.kind}{s.play.kind === 'preview' ? (s.play.hold ? ' (held, looping)' : ' (released)') : ''}</b> : 'stopped'}</span>
+      <span className="note"><kbd>?</kbd> tutorial</span>
     </div>
   )
 }

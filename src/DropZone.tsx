@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { openSource, WARN_ABOVE_SECONDS, type Source } from './source'
 import { mostRecentSession, reopenHandle, type SessionRecord } from './persist/store'
+import { demoFile } from './source/demo'
 
 export interface Opened {
   source: Source
@@ -74,6 +75,9 @@ export function DropZone({ onOpen }: { onOpen: (o: Opened) => void }) {
         <>
           <div className="big">Drop a recording here</div>
           <div className="note">WAV passes through byte-exact. MP3, FLAC, and M4A are decoded to 16-bit. Nothing leaves this machine. Click to pick a file instead.</div>
+          <div className="demo" onClick={(e) => { e.stopPropagation(); void load(demoFile(), null) }}>
+            Or try the <b>demo recording</b> with the tutorial
+          </div>
           {recent && (
             <div className="reopen" onClick={(e) => { e.stopPropagation(); void reopen() }}>
               Press <kbd>Enter</kbd> to reopen <b>{recent.fingerprint.name}</b> with its {recent.regions.length} region{recent.regions.length === 1 ? '' : 's'}

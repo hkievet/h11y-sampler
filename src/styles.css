@@ -89,3 +89,20 @@ kbd {
 .wave.shake { animation: shake .3s; }
 .drop .reopen { margin-top: 16px; padding: 10px 14px; display: inline-block; border: 1px solid var(--accent); border-radius: 6px; color: var(--ink); }
 .drop .reopen b { color: var(--accent); }
+.cols { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 12px 20px 20px; }
+.cols.with-tutorial { grid-template-columns: 420px 1fr; }
+.cols .panel { margin: 0; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+.tabs button { background: transparent; color: var(--dim); border: 1px solid var(--line); border-radius: 4px; padding: 4px 10px; cursor: pointer; font-size: 12.5px; }
+.tabs button.on { color: #000; background: var(--accent); border-color: var(--accent); }
+.tabs button.close { margin-left: auto; }
+.step { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.step .n { color: var(--dim); width: 22px; flex: none; font-family: ui-monospace, Menlo, monospace; }
+.step .t { flex: 1; }
+.step.done .t { color: var(--dim); }
+button.do { background: #262a33; color: #fff; border: 1px solid #3a3f4b; border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 12px; flex: none; }
+button.do:hover { border-color: var(--accent); }
+button.do:disabled { opacity: .5; cursor: default; }
+.km td:first-child { white-space: nowrap; }
+.drop .demo { margin-top: 14px; color: var(--dim); }
+.drop .demo b { color: var(--accent); }
