@@ -50,6 +50,7 @@ spec with nothing left to decide, was reached: see the decisions below.)
 - [Keymap prototype: feel the three modes before speccing them](./issues/09-keymap-prototype.md): the final keymap table, verified by hand; snap removed, whole ladder zoom-relative, `i`/`I` place both Anchors, `J`/`K` are 80% zoom steps, Playhead hidden outside Playhead mode and never moved by Region Select, `S` saves-and-exports, `a`/`A` audition around the Playhead, coloured play cursors, and a tutorial page modelled on the prototype walkthroughs.
 - [Write the spec](./issues/10-write-the-spec.md): `spec.md` is the build's source of truth; two test seams, Playwright end to end and Vitest on the pure core.
 - [Scaffold the app and port the state machine](./issues/11-scaffold-and-port-the-state-machine.md): git repo with two commits; Vite 6 + React 18 + TS + Vitest 3; the Core in `src/core/chopper.ts` with 33 tests and a `Driver` key-replay helper; placeholder Shell on a silent stand-in Source.
+- [Source module: WAV fast path, decoded path, peaks](./issues/12-source-module.md): `openSource` sniffs bytes; WAV Chops are a verbatim-`fmt ` header plus a `File.slice`; decoded Sources sniff the container rate, decode once, and hold Int16; a 64-frame peaks level serves every zoom; 20 tests on generated fixtures; the drop zone is live.
 
 ## Not yet specified
 
