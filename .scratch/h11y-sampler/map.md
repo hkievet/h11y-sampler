@@ -49,14 +49,11 @@ spec with nothing left to decide, was reached: see the decisions below.)
 - [Filename sanitization and collision rules](./issues/07-filename-rules.md): NFC, keep Unicode, illegal characters to `_`, trim spaces and dots, guard Windows reserved names, 120-char cap, `.wav` appended, empty falls back to the default; case-insensitive collisions get ` (2)` with a badge, never block or overwrite; sanitized name previewed live in the prompt; one sanitizer for zip, folder and `E`.
 - [Keymap prototype: feel the three modes before speccing them](./issues/09-keymap-prototype.md): the final keymap table, verified by hand; snap removed, whole ladder zoom-relative, `i`/`I` place both Anchors, `J`/`K` are 80% zoom steps, Playhead hidden outside Playhead mode and never moved by Region Select, `S` saves-and-exports, `a`/`A` audition around the Playhead, coloured play cursors, and a tutorial page modelled on the prototype walkthroughs.
 - [Write the spec](./issues/10-write-the-spec.md): `spec.md` is the build's source of truth; two test seams, Playwright end to end and Vitest on the pure core.
+- [Scaffold the app and port the state machine](./issues/11-scaffold-and-port-the-state-machine.md): git repo with two commits; Vite 6 + React 18 + TS + Vitest 3; the Core in `src/core/chopper.ts` with 33 tests and a `Driver` key-replay helper; placeholder Shell on a silent stand-in Source.
 
 ## Not yet specified
 
-- The build slices after the scaffold: Source module (WAV fast path,
-  decode path, peaks), waveform view with the Regions plugin plus
-  overlay, Transport, export (RIFF, zip, folder write), persistence,
-  tutorial page, deploy. Sliced from the spec once it exists, one ticket
-  per session, each leaving the app runnable.
+Nothing. The build is fully sliced into tickets 12 to 18.
 
 ## Out of scope
 
