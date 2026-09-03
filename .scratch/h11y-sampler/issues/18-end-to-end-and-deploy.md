@@ -1,7 +1,7 @@
 # Seam A end-to-end tests and deploy
 
 Type: task
-Status: open
+Status: claimed
 Blocked by:
 
 ## Question
