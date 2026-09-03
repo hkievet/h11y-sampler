@@ -72,11 +72,11 @@ test.describe('drop, mark, name, export', () => {
     await keys(page, 'Meta+KeyE')
     const zipPath = await (await download).path()
     const zip = await JSZip.loadAsync(await fs.readFile(zipPath!))
-    expect(Object.keys(zip.files).sort()).toEqual(['KICK_1.wav', 'field-00.wav', 'kick.wav', 'regions.json'])
+    expect(Object.keys(zip.files).sort()).toEqual(['KICK_1.wav', 'field-01.wav', 'kick.wav', 'regions.json'])
 
     const json = JSON.parse(await zip.file('regions.json')!.async('string'))
     const expected: Record<string, [number, number]> = {
-      'field-00.wav': [12 * SR, 18 * SR], // I from 18 s: start 12 s (clamped no-crossing), end 18 s
+      'field-01.wav': [12 * SR, 18 * SR], // I from 18 s: start 12 s, end 18 s; same bounds as kick, so it sorts second
       'kick.wav': [12 * SR, 18 * SR],
       'KICK_1.wav': [18 * SR, 24 * SR],
     }
