@@ -3,7 +3,8 @@ import {
   initial, keyToAction, reduce, ordered, displayName, filenames, stepFrames, sanitize,
   type State, type Action,
 } from './core/chopper'
-import { DropZone } from './DropZone'
+import { DropZone, type Opened } from './DropZone'
+import { fingerprintOf, keyOf, sameFile, loadSession, loadSessionByName, saveSession, loadFolder, saveFolder, loadSettings, saveSettings } from './persist/store'
 import { Waveform, type PlayCursor } from './view/Waveform'
 import { createTransport, type Transport } from './transport/transport'
 import { buildZip, chop, download, pickFolder, ensureWritable, writeToFolder } from './export/export'
@@ -25,8 +26,9 @@ function toKeyEvent(type: 'down' | 'up', e: KeyboardEvent) {
 }
 
 export function App() {
-  const [source, setSource] = useState<Source | null>(null)
-  const [warning, setWarning] = useState<string | null>(null)
+  const [opened, setOpened] = useState<Opened | null>(null)
+  const source = opened?.source ?? null
+  const warning = opened?.warning ?? null
   return (
     <>
       <header>
@@ -38,19 +40,54 @@ export function App() {
         </p>
       </header>
       {warning && <div className="toast">{warning}</div>}
-      {source
-        ? <Editor key={`${source.info.name}:${source.info.frames}`} source={source} />
-        : <DropZone onSource={(s, w) => { setSource(s); setWarning(w) }} />}
+      {opened
+        ? <Editor key={keyOf(fingerprintOf(opened.file))} opened={opened} />
+        : <DropZone onOpen={setOpened} />}
     </>
   )
 }
 
-function Editor({ source }: { source: Source }) {
+function Editor({ opened }: { opened: Opened }) {
+  const source: Source = opened.source
   const [s, dispatch] = useReducer(
     (st: State, a: Action) => reduce(st, a),
     undefined,
-    () => initial(source.info.frames, source.info.name, source.info.sampleRate),
+    () => {
+      const st = initial(source.info.frames, source.info.name, source.info.sampleRate)
+      return { ...st, settings: { ...st.settings, ...loadSettings() } }
+    },
   )
+  const fp = fingerprintOf(opened.file)
+
+  // ---- Persistence: restore on mount, autosave after ----
+  const restored = useRef(false)
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const exact = await loadSession(fp)
+      const rec = exact ?? (await loadSessionByName(fp.name))
+      if (cancelled) return
+      if (rec && rec.regions.length) {
+        dispatch({ type: 'restore', regions: rec.regions, nextId: rec.nextId, selected: rec.selected, playhead: rec.playhead, view: rec.view })
+        const changed = !sameFile(rec.fingerprint, fp)
+        dispatch({ type: 'notify', text: changed
+          ? `Restored ${rec.regions.length} region${rec.regions.length === 1 ? '' : 's'}, but the file changed since; marks may not line up.`
+          : `Restored ${rec.regions.length} region${rec.regions.length === 1 ? '' : 's'}.` })
+      }
+      restored.current = true
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  useEffect(() => {
+    if (!restored.current) return
+    const t = setTimeout(() => {
+      void saveSession({ fingerprint: fp, handle: opened.handle, regions: s.regions, nextId: s.nextId, selected: s.selected, playhead: s.playhead, view: s.view })
+    }, 200)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.regions, s.selected, s.playhead, s.view])
+  useEffect(() => { saveSettings(s.settings) }, [s.settings])
   const stateRef = useRef(s)
   stateRef.current = s
 
@@ -112,7 +149,8 @@ function Editor({ source }: { source: Source }) {
     transport.current?.prepare({ start: a!, end: b! })
   }, [activeRange])
   // ---- Export: driven by the Core's export intents ----
-  const folder = useRef<FileSystemDirectoryHandle | null>(null) // the Persistence ticket remembers this across reloads
+  const folder = useRef<FileSystemDirectoryHandle | null>(null)
+  useEffect(() => { void loadFolder().then((h) => { folder.current = h }) }, [])
   useEffect(() => {
     const req = s.exportReq
     if (!req || s.exportSeq === 0) return
@@ -127,7 +165,10 @@ function Editor({ source }: { source: Source }) {
           download(await buildZip(source, req.files), req.zip!)
           notify(`Exported ${req.files.length} chop${req.files.length === 1 ? '' : 's'} to ${req.zip}`)
         } else {
-          if (!folder.current) folder.current = await pickFolder()
+          if (!folder.current) {
+            folder.current = await pickFolder()
+            if (folder.current) void saveFolder(folder.current)
+          }
           if (!folder.current) { notify('No folder chosen.'); return }
           if (!(await ensureWritable(folder.current))) { notify('No permission to write to that folder.'); return }
           const names = await writeToFolder(folder.current, source, req.files)

@@ -1,7 +1,7 @@
 # Persistence: reload restore and autosave
 
 Type: task
-Status: open
+Status: claimed
 Blocked by:
 
 ## Question

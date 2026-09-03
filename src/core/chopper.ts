@@ -140,6 +140,7 @@ export type Action =
   | { type: 'exportOne' }
   | { type: 'exportBatch'; to: 'zip' | 'folder' }
   | { type: 'notify'; text: string }
+  | { type: 'restore'; regions: Region[]; nextId: number; selected: number[]; playhead: number; view: { win: number; start: number } }
 
 export const DEFAULT_SETTINGS: Settings = {
   plainPct: 1,
@@ -598,6 +599,28 @@ export function reduce(prev: State, a: Action): State {
     }
     case 'notify':
       return toast(s, a.text)
+    case 'restore': {
+      // a persisted session: regions, selection, playhead, and view come back; undo history does not
+      const clampF = (f: number) => clamp(Math.round(f), 0, s.frames)
+      const regions = a.regions
+        .map((r) => ({ ...r, start: clampF(r.start), end: clampF(r.end) }))
+        .filter((r) => r.end > r.start)
+      const ids = new Set(regions.map((r) => r.id))
+      const win = clamp(Math.round(a.view.win), 64, s.frames)
+      return {
+        ...s,
+        regions,
+        nextId: Math.max(a.nextId, ...regions.map((r) => r.id + 1), 1),
+        selected: a.selected.filter((id) => ids.has(id)),
+        playhead: clampF(a.playhead),
+        view: { win, start: clamp(Math.round(a.view.start), 0, Math.max(0, s.frames - win)) },
+        undo: [],
+        redo: [],
+        mode: 'playhead',
+        draft: null,
+        activeId: null,
+      }
+    }
   }
 }
 

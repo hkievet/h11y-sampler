@@ -424,3 +424,33 @@ describe('filenames', () => {
     expect(files(d.s)[10]).toBe('rec-10.wav')
   })
 })
+
+// ---------- restore ----------
+
+describe('restore', () => {
+  it('brings back regions, selection, playhead, and view, clamped to the file, with no undo history', () => {
+    const d = new Driver()
+    d.do({
+      type: 'restore',
+      regions: [
+        { id: 3, start: 10, end: 20, name: 'kick' },
+        { id: 5, start: 100, end: 99_999_999, name: null }, // end past the file: clamped
+        { id: 7, start: 50, end: 50, name: 'empty' }, // zero length: dropped
+      ],
+      nextId: 2, // stale: bumped past the highest id
+      selected: [3, 7, 42],
+      playhead: 15,
+      view: { win: 4800, start: 0 },
+    })
+    expect(d.s.regions.map((r) => r.id)).toEqual([3, 5])
+    expect(d.s.regions[1]!.end).toBe(SECONDS * SR)
+    expect(d.s.nextId).toBe(6)
+    expect(d.s.selected).toEqual([3])
+    expect(d.s.playhead).toBe(15)
+    expect(d.s.view).toEqual({ win: 4800, start: 0 })
+    expect(d.s.undo).toEqual([])
+    expect(d.s.mode).toBe('playhead')
+    d.keys('KeyI', 'KeyS'); d.name(null)
+    expect(d.s.regions[2]!.id).toBe(6)
+  })
+})

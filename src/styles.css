@@ -87,3 +87,5 @@ kbd {
 .wave-ws ::part(region) { pointer-events: none; }
 .wave-overlay { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
 .wave.shake { animation: shake .3s; }
+.drop .reopen { margin-top: 16px; padding: 10px 14px; display: inline-block; border: 1px solid var(--accent); border-radius: 6px; color: var(--ink); }
+.drop .reopen b { color: var(--accent); }
