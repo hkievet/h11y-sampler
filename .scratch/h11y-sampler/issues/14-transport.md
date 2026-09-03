@@ -1,7 +1,7 @@
 # Transport: media element and Web Audio previews
 
 Type: task
-Status: open
+Status: claimed
 Blocked by:
 
 ## Question

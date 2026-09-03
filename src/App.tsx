@@ -4,7 +4,8 @@ import {
   type State, type Action,
 } from './core/chopper'
 import { DropZone } from './DropZone'
-import { Waveform } from './view/Waveform'
+import { Waveform, type PlayCursor } from './view/Waveform'
+import { createTransport, type Transport } from './transport/transport'
 import type { Source } from './source'
 
 // Shell. Until the waveform, Transport, and export land, this drives the
@@ -79,9 +80,46 @@ function Editor({ source }: { source: Source }) {
 
   useEffect(() => () => source.dispose(), [source])
 
+  // ---- Transport: driven by the Core's play intents ----
+  const transport = useRef<Transport | null>(null)
+  useEffect(() => {
+    const t = createTransport(source)
+    transport.current = t
+    const off = t.onEnded(() => dispatch({ type: 'playbackEnded' }))
+    return () => {
+      off()
+      t.dispose()
+      transport.current = null
+    }
+  }, [source])
+  useEffect(() => {
+    const t = transport.current
+    if (!t) return
+    const p = s.play
+    if (!p) { t.cancel(); return }
+    if (p.kind === 'playhead') t.play(p.from)
+    else if (p.kind === 'preview') { if (p.hold) void t.previewStart({ start: p.start, end: p.end }); else t.previewRelease() }
+    else if (p.kind === 'audition') void t.once({ start: p.start, end: p.end }, 'audition')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.playSeq])
+  // build the preview buffer when the Active Region or draft changes, so Space is instant
+  const activeRange = s.mode === 'insert' && s.draft ? `${s.draft.start}:${s.draft.end}`
+    : s.mode === 'select' && s.activeId != null ? (() => { const r = s.regions.find((x) => x.id === s.activeId); return r ? `${r.start}:${r.end}` : '' })() : ''
+  useEffect(() => {
+    if (!activeRange) return
+    const [a, b] = activeRange.split(':').map(Number)
+    transport.current?.prepare({ start: a!, end: b! })
+  }, [activeRange])
+  const playCursor = (): PlayCursor => {
+    const t = transport.current
+    const kind = t?.cursorKind()
+    const frame = t?.position()
+    return kind && frame != null ? { frame, kind } : null
+  }
+
   return (
     <>
-      <Waveform source={source} s={s} dispatch={dispatch} playCursor={() => null} />
+      <Waveform source={source} s={s} dispatch={dispatch} playCursor={playCursor} />
       <StatusBar s={s} />
       <Toast s={s} />
       <StatePanel s={s} />
