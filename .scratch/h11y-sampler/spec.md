@@ -38,8 +38,8 @@ Producer means the person using the tool.
 4. As a producer, I want the mouse to be optional after the drop, so that I can keep both hands on the keyboard for repetitive work.
 5. As a producer, I want a status bar that always shows the mode, Playhead time, step sizes, zoom, Region count, Selected count, and what is playing, so that I never guess what a key will do.
 6. As a producer, I want `h` and `l` to scrub by a fraction of what is on screen, so that zooming in is how I get precision.
-7. As a producer, I want `H` and `L` to scrub by one pixel at the current zoom, so that at maximum zoom I can place a boundary by ear at sample level.
-8. As a producer, I want Option+`h`/`l` to scrub by a large fraction of the screen, so that I can cross a long Source quickly.
+7. As a producer, I want Option+`h`/`l` to scrub by one pixel at the current zoom, so that at maximum zoom I can place a boundary by ear at sample level.
+8. As a producer, I want `H` and `L` to scrub by a large fraction of the screen, so that I can cross a long Source quickly.
 9. As a producer, I want `j`/`k` to zoom by 20% and `J`/`K` by 80% around the Playhead, so that I can dive into and out of a moment in two or three presses.
 10. As a producer, I want `J` to stop at a one-second window and `K` at the whole file, so that repeated presses land somewhere useful.
 11. As a producer, I want Space to play from the Playhead and Space again to stop and snap back to where I started, so that I can listen to a moment repeatedly.
@@ -229,8 +229,8 @@ Playhead mode
 | Key | Action |
 |---|---|
 | `h` / `l` | scrub by 1% of the visible window (`[` `]` aliases) |
-| `H` / `L` | scrub by one pixel at the current zoom |
-| Option+`h` / `l` | scrub by 10% of the visible window |
+| `H` / `L` | scrub by 10% of the visible window |
+| Option+`h` / `l` | scrub by one pixel at the current zoom |
 | `j` / `k` | zoom in / out 20% around the Playhead |
 | `J` / `K` | zoom in / out 80%; `J` floors at a one-second window, `K` caps at the whole file |
 | `Space` | play from the Playhead; again stops and snaps back to the Return point |

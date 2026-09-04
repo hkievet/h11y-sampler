@@ -30,8 +30,8 @@ regions (or all). `Cmd+Shift+E` writes the same chops into a folder. `u`,
 | Playhead mode | |
 |---|---|
 | `h` / `l` | scrub by 1% of the visible window |
-| `H` / `L` | scrub by one pixel at the current zoom |
-| `Opt+h` / `Opt+l` | scrub by 10% of the visible window |
+| `H` / `L` | scrub by 10% of the visible window |
+| `Opt+h` / `Opt+l` | scrub by one pixel at the current zoom |
 | `j` / `k`, `J` / `K` | zoom 20%, zoom 80% (J floors at one second, K caps at the file) |
 | `Space` | play from the playhead; again stops and snaps back |
 | `a` / `A` | audition 300 ms ahead of / behind the playhead |

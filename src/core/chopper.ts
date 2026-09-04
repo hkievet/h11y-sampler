@@ -325,7 +325,7 @@ export function keyToAction(s: State, ev: KeyEvent): Action | null {
   if (scrubKey) {
     if (meta) return null
     const dir = code === 'BracketLeft' || code === 'KeyH' ? -1 : 1
-    return { type: 'scrub', dir, size: alt ? 'coarse' : shift ? 'fine' : 'plain' }
+    return { type: 'scrub', dir, size: shift ? 'coarse' : alt ? 'fine' : 'plain' }
   }
   if (code === 'KeyJ' && !meta && !ctrl) return { type: 'zoom', kind: shift ? 'second' : 'in' }
   if (code === 'KeyK' && !meta && !ctrl) return { type: 'zoom', kind: shift ? 'fit' : 'out' }

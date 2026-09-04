@@ -242,8 +242,8 @@ function StatusBar({ s }: { s: State }) {
       <span className={'mode ' + s.mode}>{modeLabel}</span>
       <span>playhead <b>{fmt(s.playhead, s.sr)}</b></span>
       <span>
-        step h/l <b>{fmtStep(stepFrames(s, 'plain'), s.sr)}</b> · H/L <b>{fmtStep(stepFrames(s, 'fine'), s.sr)}</b> · opt+h/l{' '}
-        <b>{fmtStep(stepFrames(s, 'coarse'), s.sr)}</b>
+        step h/l <b>{fmtStep(stepFrames(s, 'plain'), s.sr)}</b> · H/L <b>{fmtStep(stepFrames(s, 'coarse'), s.sr)}</b> · opt+h/l{' '}
+        <b>{fmtStep(stepFrames(s, 'fine'), s.sr)}</b>
       </span>
       <span>zoom <b>{(s.view.win / s.sr).toFixed(3)}s</b> across</span>
       <span>regions <b>{s.regions.length}</b> · selected <b>{s.selected.length}</b></span>

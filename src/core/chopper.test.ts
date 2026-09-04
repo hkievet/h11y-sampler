@@ -57,14 +57,14 @@ const files = (s: State) => filenames(s, s.regions).map((f) => f.file)
 describe('mark and name a chop', () => {
   it('i places both anchors, end active; s prompts with the default; Enter saves and returns to Playhead mode at the end', () => {
     const d = new Driver()
-    d.keys('Opt+KeyL', 'Opt+KeyL', 'Opt+KeyL', 'Opt+KeyL') // 10% of the window each, fitted: 3 s each
+    d.keys('Shift+KeyL', 'Shift+KeyL', 'Shift+KeyL', 'Shift+KeyL') // 10% of the window each, fitted: 3 s each
     expect(d.sec(d.s.playhead)).toBe(12)
     d.keys('KeyI')
     expect(d.s.mode).toBe('insert')
     expect(d.s.draft).toEqual({ start: 12 * SR, end: 18 * SR, active: 'end', editingId: null }) // 20% of 30 s = 6 s
     d.keys('KeyO', 'KeyO')
     expect(d.s.draft!.active).toBe('end')
-    d.keys('Shift+KeyH', 'Shift+KeyH', 'Shift+KeyH') // fine = one pixel of a 1000 px view = 1440 frames
+    d.keys('Opt+KeyH', 'Opt+KeyH', 'Opt+KeyH') // fine = one pixel of a 1000 px view = 1440 frames
     expect(d.s.draft!.end).toBe(18 * SR - 3 * 1440)
     d.keys('KeyA')
     expect(d.s.play).toEqual({ kind: 'audition', side: 'end', end: d.s.draft!.end, start: d.s.draft!.end - 0.3 * SR })
@@ -83,7 +83,7 @@ describe('mark and name a chop', () => {
 
   it('v and V are aliases for i and I', () => {
     const d = new Driver()
-    d.keys('Opt+KeyL', 'KeyV')
+    d.keys('Shift+KeyL', 'KeyV')
     expect(d.s.mode).toBe('insert')
     expect(d.s.draft).toMatchObject({ start: 3 * SR, active: 'end' })
     d.keys('Escape', 'Shift+KeyV')
@@ -102,7 +102,7 @@ describe('mark and name a chop', () => {
 
   it('I mirrors i: end at the playhead, start a gap earlier, start active', () => {
     const d = new Driver()
-    d.keys('Opt+KeyL', 'Opt+KeyL', 'Opt+KeyL')
+    d.keys('Shift+KeyL', 'Shift+KeyL', 'Shift+KeyL')
     d.keys('Shift+KeyI')
     expect(d.s.draft).toEqual({ start: 3 * SR, end: 9 * SR, active: 'start', editingId: null })
   })
@@ -111,7 +111,7 @@ describe('mark and name a chop', () => {
     const d = new Driver()
     d.keys('KeyI')
     d.keys('KeyO') // start active
-    for (let i = 0; i < 10; i++) d.keys('Opt+KeyL')
+    for (let i = 0; i < 10; i++) d.keys('Shift+KeyL')
     expect(d.s.draft!.start).toBe(d.s.draft!.end)
     d.do({ type: 'seekTo', frame: 25 * SR })
     expect(d.s.draft!.start).toBe(d.s.draft!.end)
@@ -214,7 +214,7 @@ describe('preview intents', () => {
 
   it('a and A audition ahead of and behind the playhead', () => {
     const d = new Driver()
-    d.keys('Opt+KeyL')
+    d.keys('Shift+KeyL')
     d.keys('KeyA')
     expect(d.s.play).toEqual({ kind: 'audition', start: 3 * SR, end: 3.3 * SR, side: 'start' })
     d.keys('Space') // stop
@@ -228,9 +228,9 @@ describe('preview intents', () => {
 describe('overlap, cycle, select, batch export', () => {
   function twoOverlapping() {
     const d = new Driver()
-    d.keys('Opt+KeyL', 'Opt+KeyL', 'Opt+KeyL', 'Opt+KeyL', 'KeyI', 'KeyS') // 12 s to 18 s
+    d.keys('Shift+KeyL', 'Shift+KeyL', 'Shift+KeyL', 'Shift+KeyL', 'KeyI', 'KeyS') // 12 s to 18 s
     d.name(null)
-    d.keys('Shift+KeyI', 'Opt+KeyH', 'Opt+KeyH', 'KeyS') // ends at 18 s, starts well before 12 s
+    d.keys('Shift+KeyI', 'Shift+KeyH', 'Shift+KeyH', 'KeyS') // ends at 18 s, starts well before 12 s
     d.name('808/kick')
     return d
   }
@@ -283,7 +283,7 @@ describe('overlap, cycle, select, batch export', () => {
 
   it('automatic names renumber when a region is inserted earlier in the file', () => {
     const d = new Driver()
-    d.keys('Opt+KeyL', 'Opt+KeyL', 'KeyI', 'KeyS')
+    d.keys('Shift+KeyL', 'Shift+KeyL', 'KeyI', 'KeyS')
     d.name(null)
     expect(files(d.s)).toEqual(['rec-00.wav'])
     d.do({ type: 'seekTo', frame: 0 })

@@ -67,6 +67,7 @@ each shipped directly without a ticket:
 - `c` clears the selection in Region Select mode (`a` selects all).
 - `Enter` saves in Insert Region mode like `s`; `Shift+Enter` like `S`.
 - `v` / `V` are aliases for `i` / `I` in Playhead mode.
+- Scrub modifiers swapped: `H` / `L` (Shift) is the coarse 10% step, Option+`h` / `l` the one-pixel fine step. Supersedes the modifier choice in [Chrome-reserved shortcuts on macOS](./issues/01-chrome-reserved-shortcuts.md).
 - Clicking a region in the list enters Region Select mode on it and plays it once.
 - The name prompt refuses a colliding name with a shake and an inline
   error instead of suffixing ` (2)` at export; the suffix stays as a

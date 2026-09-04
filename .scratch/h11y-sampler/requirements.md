@@ -60,8 +60,8 @@ current zoom, coarse = 10% of the window.
 | Key | Action |
 |---|---|
 | `h` / `l` | scrub by the plain step (`[` `]` are aliases) |
-| `H` / `L` | scrub by the fine step |
-| Option+`h` / `l` | scrub by the coarse step |
+| `H` / `L` | scrub by the coarse step |
+| Option+`h` / `l` | scrub by the fine step |
 | `j` / `k` | zoom in / out 20% around the Playhead |
 | `J` / `K` | zoom in / out 80%; `J` floors at a one-second window, `K` caps at the whole file |
 | `Space` | play from the Playhead; again stops and snaps back to the Return point |

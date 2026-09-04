@@ -30,7 +30,7 @@ async function drop(page: Page, name: string, bytes: Uint8Array) {
   await page.keyboard.press('Home') // no-op key: settle
 }
 
-/** press a spec like 'Alt+KeyL' or 'Shift+KeyI' */
+/** press a spec like 'Shift+KeyL' or 'Shift+KeyI' */
 async function keys(page: Page, ...specs: string[]) {
   for (const s of specs) await page.keyboard.press(s)
 }
@@ -49,7 +49,7 @@ test.describe('drop, mark, name, export', () => {
     await drop(page, fx.name, fx.bytes)
 
     // region 1: 12 s to 18 s (four coarse steps of 3 s, then i places the end 20% of 30 s later)
-    await keys(page, 'Alt+KeyL', 'Alt+KeyL', 'Alt+KeyL', 'Alt+KeyL')
+    await keys(page, 'Shift+KeyL', 'Shift+KeyL', 'Shift+KeyL', 'Shift+KeyL')
     await expect(page.locator('.status')).toContainText('12.000s')
     await keys(page, 'KeyI')
     await expect(page.locator('.status .mode')).toHaveText('INSERT REGION')
@@ -98,7 +98,7 @@ test.describe('drop, mark, name, export', () => {
   test('E downloads a single chop of a float WAV with a fact chunk', async ({ page }) => {
     const fx = fixture({ bits: 32, kind: 'float', channels: 1, name: 'float.wav' })
     await drop(page, fx.name, fx.bytes)
-    await keys(page, 'Alt+KeyL', 'KeyI', 'KeyS')
+    await keys(page, 'Shift+KeyL', 'KeyI', 'KeyS')
     await nameRegion(page, 'swell')
     await keys(page, 'Tab')
     await expect(page.locator('.status .mode')).toHaveText('REGION SELECT')
@@ -127,7 +127,7 @@ test.describe('keys and modes', () => {
     const fx = fixture({ channels: 1 })
     await page.setViewportSize({ width: 900, height: 400 }) // short viewport: the page can scroll
     await drop(page, fx.name, fx.bytes)
-    await keys(page, 'Alt+KeyL', 'KeyI', 'KeyS')
+    await keys(page, 'Shift+KeyL', 'KeyI', 'KeyS')
     await nameRegion(page, null)
     await page.evaluate(() => window.scrollTo(0, 0))
     await keys(page, 'Space')
@@ -158,11 +158,11 @@ test.describe('keys and modes', () => {
     await keys(page, 'Tab')
     await expect(page.locator('.toast')).toContainText('No regions yet')
     await expect(page.locator('.status .mode')).toHaveText('PLAYHEAD')
-    await keys(page, 'Alt+KeyL', 'KeyI', 'KeyS')
+    await keys(page, 'Shift+KeyL', 'KeyI', 'KeyS')
     await nameRegion(page, null)
     await keys(page, 'KeyI', 'KeyS')
     await nameRegion(page, null)
-    await keys(page, 'Alt+KeyH')
+    await keys(page, 'Shift+KeyH')
     const before = await page.locator('.status').textContent()
     await keys(page, 'Tab', 'KeyL', 'KeyH', 'KeyL', 'Escape')
     const after = await page.locator('.status').textContent()
@@ -174,7 +174,7 @@ test.describe('persistence', () => {
   test('regions come back after a reload and re-drop', async ({ page }) => {
     const fx = fixture({ channels: 1, name: 'session.wav' })
     await drop(page, fx.name, fx.bytes)
-    await keys(page, 'Alt+KeyL', 'KeyI', 'KeyS')
+    await keys(page, 'Shift+KeyL', 'KeyI', 'KeyS')
     await nameRegion(page, 'one')
     await keys(page, 'KeyI', 'KeyS')
     await nameRegion(page, 'two')
