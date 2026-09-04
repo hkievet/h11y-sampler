@@ -130,6 +130,7 @@ export type Action =
   | { type: 'promptCancel' }
   | { type: 'tab' }
   | { type: 'cycle'; dir: -1 | 1 }
+  | { type: 'pick'; id: number }
   | { type: 'edit' }
   | { type: 'toggleSelect' }
   | { type: 'selectAll' }
@@ -547,6 +548,15 @@ export function reduce(prev: State, a: Action): State {
       const i = list.findIndex((r) => r.id === s.activeId)
       const j = (i + a.dir + list.length) % list.length
       return keepVisible({ ...stopAll(s), activeId: list[j]!.id }) // the playhead stays where it was
+    }
+    case 'pick': {
+      // a click on a region in the list: Region Select mode, that region active, played once
+      const r = find(s, a.id)
+      if (!r || s.prompt) return prev
+      return keepVisible({
+        ...s, mode: 'select', draft: null, activeId: r.id,
+        play: { kind: 'preview', start: r.start, end: r.end, hold: false }, playSeq: s.playSeq + 1, returnPoint: null,
+      })
     }
     case 'edit': {
       const r = find(s, s.activeId)

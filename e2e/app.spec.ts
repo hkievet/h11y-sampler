@@ -186,6 +186,10 @@ test.describe('persistence', () => {
     await expect(page.locator('.status')).toContainText('regions 2')
     await expect(page.locator('.toast')).toContainText('Restored 2 regions')
     await expect(page.locator('table')).toContainText('one.wav')
+    await page.locator('tr.pick', { hasText: 'two' }).click() // the list: select and play
+    await expect(page.locator('.status .mode')).toHaveText('REGION SELECT')
+    await expect(page.locator('.status')).toContainText('playing preview')
+    await expect(page.locator('tr.active')).toContainText('two')
     await expectPluginRegionsAligned(page)
     await keys(page, 'Shift+Slash') // toggle the tutorial: the container resizes and wavesurfer redraws
     await page.waitForTimeout(400)

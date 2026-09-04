@@ -18,7 +18,7 @@ export type TransportState =
   | { kind: 'idle' }
   | { kind: 'playhead'; from: number }
   | { kind: 'preview'; range: FrameRange; t0: number; passLen: number; releasing: boolean }
-  | { kind: 'audition' | 'export'; range: FrameRange; t0: number }
+  | { kind: 'audition' | 'export' | 'preview-once'; range: FrameRange; t0: number }
 
 export interface TransportOptions {
   /** max range for the buffer engine; default ten minutes of frames */
@@ -41,7 +41,7 @@ export interface Transport {
   /** buffer engine, keyup: finish the pass if the first is incomplete, else ramp and stop */
   previewRelease(): void
   /** buffer engine: play `range` once (auditions, export playback) */
-  once(range: FrameRange, kind: 'audition' | 'export'): Promise<void>
+  once(range: FrameRange, kind: 'audition' | 'export' | 'preview'): Promise<void>
   /** build the buffer for `range` ahead of time so Space is instant */
   prepare(range: FrameRange): void
   /** stop whatever is playing, with the gain ramp on the buffer engine */
@@ -178,7 +178,7 @@ export function createTransport(source: Source, opts: TransportOptions = {}): Tr
       return Math.min(state.range.end, state.range.start + Math.round(el * sr))
     },
     cursorKind() {
-      return state.kind === 'idle' ? null : state.kind
+      return state.kind === 'idle' ? null : state.kind === 'preview-once' ? 'preview' : state.kind
     },
     play(frame) {
       killNode(true)
@@ -226,7 +226,7 @@ export function createTransport(source: Source, opts: TransportOptions = {}): Tr
       const buf = await buildBuffer(range)
       if (seq + 1 !== mySeq) return
       const t0 = startNode(buf, false, buf.duration)
-      state = { kind, range, t0 }
+      state = { kind: kind === 'preview' ? 'preview-once' : kind, range, t0 }
     },
     prepare(range) {
       if (range.end > range.start && range.end - range.start <= capFrames) void buildBuffer(range)

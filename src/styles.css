@@ -109,3 +109,5 @@ button.do:disabled { opacity: .5; cursor: default; }
 .build { color: var(--line); font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
 .prompt .box.invalid input { border-color: var(--red); }
 .prompt .error { margin-top: 8px; font-size: 12px; color: var(--red); min-height: 16px; }
+tr.pick { cursor: pointer; }
+tr.pick:hover td { background: rgba(255,255,255,.04); }

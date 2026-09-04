@@ -151,7 +151,11 @@ function Editor({ opened }: { opened: Opened }) {
     const p = s.play
     if (!p) { t.cancel(); return }
     if (p.kind === 'playhead') t.play(p.from)
-    else if (p.kind === 'preview') { if (p.hold) void t.previewStart({ start: p.start, end: p.end }); else t.previewRelease() }
+    else if (p.kind === 'preview') {
+      if (p.hold) void t.previewStart({ start: p.start, end: p.end })
+      else if (t.state.kind === 'preview') t.previewRelease()
+      else void t.once({ start: p.start, end: p.end }, 'preview') // picked from the list: play once
+    }
     else if (p.kind === 'audition') void t.once({ start: p.start, end: p.end }, 'audition')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.playSeq])
@@ -216,7 +220,7 @@ function Editor({ opened }: { opened: Opened }) {
       <StatusBar s={s} />
       <Toast s={s} />
       <div className={'cols' + (tutorial ? ' with-tutorial' : '')}>
-        <StatePanel s={s} />
+        <StatePanel s={s} dispatch={dispatch} />
         {tutorial && <Tutorial onClose={() => setTutorial(false)} />}
       </div>
       {s.prompt && <Prompt s={s} dispatch={dispatch} />}
@@ -261,13 +265,13 @@ function Toast({ s }: { s: State }) {
   return <div className="toast">{s.toast.text}</div>
 }
 
-function StatePanel({ s }: { s: State }) {
+function StatePanel({ s, dispatch }: { s: State; dispatch: (a: Action) => void }) {
   const d = s.draft
   const active = s.activeId != null ? s.regions.find((r) => r.id === s.activeId) : undefined
   const files = filenames(s, s.regions)
   return (
     <div className="panel">
-      <h2>Current state</h2>
+      <h2>Regions <span className="note">(click one to select and play it)</span></h2>
       <dl>
         <dt>Mode</dt><dd>{s.mode}</dd>
         <dt>Playhead</dt><dd>{fmt(s.playhead, s.sr)} (frame {s.playhead})</dd>
@@ -289,7 +293,7 @@ function StatePanel({ s }: { s: State }) {
           {ordered(s).map((r, i) => {
             const f = files.find((x) => x.region.id === r.id)!
             return (
-              <tr key={r.id} className={r.id === s.activeId && s.mode === 'select' ? 'active' : ''}>
+              <tr key={r.id} className={'pick' + (r.id === s.activeId && s.mode === 'select' ? ' active' : '')} onClick={() => dispatch({ type: 'pick', id: r.id })} title="Select and play">
                 <td>{i}</td>
                 <td>{s.selected.includes(r.id) ? '[x] ' : ''}{displayName(s, r)}{r.name == null ? <span className="note"> (auto)</span> : null}</td>
                 <td>{fmt(r.start, s.sr)} {fmt(r.end, s.sr)}</td>

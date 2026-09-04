@@ -471,6 +471,23 @@ describe('filenames', () => {
   })
 })
 
+// ---------- pick from the list ----------
+
+describe('pick', () => {
+  it('a click on a listed region enters Region Select on it and plays it once', () => {
+    const d = new Driver()
+    d.keys('KeyI', 'KeyS'); d.name('a')
+    d.keys('KeyI', 'KeyS'); d.name('b')
+    const second = ordered(d.s)[1]!
+    d.do({ type: 'pick', id: second.id })
+    expect(d.s.mode).toBe('select')
+    expect(d.s.activeId).toBe(second.id)
+    expect(d.s.play).toEqual({ kind: 'preview', start: second.start, end: second.end, hold: false })
+    d.do({ type: 'pick', id: 999 })
+    expect(d.s.activeId).toBe(second.id)
+  })
+})
+
 // ---------- restore ----------
 
 describe('restore', () => {

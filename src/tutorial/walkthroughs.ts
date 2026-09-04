@@ -90,6 +90,7 @@ export const keymap: Record<string, [string, string][]> = {
     ['Cmd+Shift+E', 'write the same chops into a folder'],
     ['u / Ctrl+R', 'undo / redo (Cmd+Z / Cmd+Shift+Z too)'],
     ['?', 'toggle this tutorial'],
+    ['click a region in the list', 'Region Select mode on it, played once'],
   ],
   'Playhead mode': [
     ['h / l', 'scrub by 1% of the visible window ([ ] too)'],

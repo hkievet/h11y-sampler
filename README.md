@@ -19,7 +19,7 @@ npm run build      # dist/
 ```
 
 Press `?` in the app for the tutorial, or open the demo recording from the
-drop zone.
+drop zone. Clicking a region in the list selects it and plays it once.
 
 ## Keymap
 
